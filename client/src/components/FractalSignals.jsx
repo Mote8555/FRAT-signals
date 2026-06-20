@@ -1,5 +1,6 @@
 import React from "react";
 import TimeframeCard from "./TimeframeCard";
+import useMediaQuery from "../useMediaQuery";
 
 const TF_ORDER = ["15m", "1h", "4h", "1d"];
 
@@ -22,6 +23,7 @@ function getConfluenceLabel(bullish, bearish, neutral) {
 }
 
 export default function FractalSignals({ data, loading, error }) {
+  const isMobile = useMediaQuery("(max-width: 640px)");
   if (loading) {
     return (
       <div style={{ textAlign: "center", color: "#9ca3af", padding: 40, background: "#111827", borderRadius: 12, border: "1px solid #1f2937" }}>
@@ -56,19 +58,21 @@ export default function FractalSignals({ data, loading, error }) {
         background: "#111827",
         borderRadius: 12,
         border: "1px solid #1f2937",
-        padding: 20,
+        padding: isMobile ? 14 : 20,
       }}
     >
       <div
         style={{
           display: "flex",
+          flexDirection: isMobile ? "column" : "row",
           justifyContent: "space-between",
-          alignItems: "center",
+          alignItems: isMobile ? "flex-start" : "center",
+          gap: isMobile ? 8 : 0,
           marginBottom: 16,
         }}
       >
         <div>
-          <span style={{ fontSize: 18, fontWeight: 700, color: "#f9fafb" }}>{pair}</span>
+          <span style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: "#f9fafb" }}>{pair}</span>
           {btcFilter && (
             <span
               style={{
@@ -84,7 +88,7 @@ export default function FractalSignals({ data, loading, error }) {
             </span>
           )}
         </div>
-        <span style={{ fontSize: 13, fontWeight: 600, color: con.color }}>
+        <span style={{ fontSize: isMobile ? 12 : 13, fontWeight: 600, color: con.color }}>
           {con.label}
         </span>
       </div>
@@ -124,8 +128,8 @@ export default function FractalSignals({ data, loading, error }) {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: 12,
+          gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+          gap: isMobile ? 10 : 12,
         }}
       >
         {TF_ORDER.map((tf) => (

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import PairSelector from "./components/PairSelector";
 import FractalSignals from "./components/FractalSignals";
+import useMediaQuery from "./useMediaQuery";
 import { fetchPairs, fetchFractal } from "./api";
 
 const MARKETS = [
@@ -14,6 +15,7 @@ const SOURCES = [
 ];
 
 export default function App() {
+  const isMobile = useMediaQuery("(max-width: 640px)");
   const [market, setMarket] = useState("crypto");
   const [source, setSource] = useState("binance");
   const [pairs, setPairs] = useState([]);
@@ -73,10 +75,10 @@ export default function App() {
         style={{
           maxWidth: 700,
           margin: "0 auto",
-          padding: "40px 20px",
+          padding: isMobile ? "24px 12px" : "40px 20px",
         }}
       >
-        <div style={{ textAlign: "center", marginBottom: 32 }}>
+        <div style={{ textAlign: "center", marginBottom: isMobile ? 24 : 32 }}>
           <h1 style={{ fontSize: 24, fontWeight: 800, margin: 0, letterSpacing: "-0.5px" }}>
             FRAT Signals
           </h1>
@@ -126,9 +128,10 @@ export default function App() {
         <div
           style={{
             display: "flex",
-            gap: 12,
+            flexDirection: isMobile ? "column" : "row",
+            gap: isMobile ? 8 : 12,
             marginBottom: 20,
-            alignItems: "center",
+            alignItems: isMobile ? "stretch" : "center",
           }}
         >
           {market === "crypto" && (
@@ -139,6 +142,7 @@ export default function App() {
                 background: "#1f2937",
                 borderRadius: 6,
                 padding: 2,
+                width: isMobile ? "100%" : undefined,
               }}
             >
               {SOURCES.map((s) => (
@@ -146,6 +150,7 @@ export default function App() {
                   key={s.key}
                   onClick={() => setSource(s.key)}
                   style={{
+                    flex: 1,
                     padding: "6px 12px",
                     borderRadius: 5,
                     border: "none",
@@ -166,6 +171,7 @@ export default function App() {
             pairs={pairs}
             selected={selected}
             onSelect={setSelected}
+            fullWidth={isMobile}
           />
           <button
             onClick={() => loadFractal(selected)}

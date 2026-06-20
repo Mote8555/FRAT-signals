@@ -1,6 +1,7 @@
 import React from "react";
 import ConfidenceMeter from "./ConfidenceMeter";
 import ComponentBreakdown from "./ComponentBreakdown";
+import useMediaQuery from "../useMediaQuery";
 
 const regimeColors = {
   TRENDING: "#22c55e",
@@ -10,6 +11,7 @@ const regimeColors = {
 };
 
 export default function TimeframeCard({ tf, data }) {
+  const isMobile = useMediaQuery("(max-width: 640px)");
   const noData = !data;
   const signal = data?.signal;
   const regime = data?.regime;
@@ -36,10 +38,10 @@ export default function TimeframeCard({ tf, data }) {
           ? `1.5px solid ${signalColor}44`
           : "1px solid #1f2937",
         boxShadow: hasSignal ? `0 0 12px ${signalColor}22` : "none",
-        padding: 16,
+        padding: isMobile ? 12 : 16,
         display: "flex",
         flexDirection: "column",
-        gap: 10,
+        gap: 8,
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -126,7 +128,7 @@ export default function TimeframeCard({ tf, data }) {
           </div>
 
           <div style={{ display: "flex", justifyContent: "center", margin: "4px 0" }}>
-            <ConfidenceMeter confidence={signal.confidence} size={70} />
+            <ConfidenceMeter confidence={signal.confidence} size={isMobile ? 60 : 70} />
           </div>
 
           <ComponentBreakdown components={signal.confidence?.components} />

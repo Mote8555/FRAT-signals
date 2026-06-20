@@ -1,6 +1,6 @@
 import React from "react";
 
-export default function PairSelector({ pairs, selected, onSelect }) {
+export default function PairSelector({ pairs, selected, onSelect, fullWidth }) {
   return (
     <select
       value={selected}
@@ -14,7 +14,8 @@ export default function PairSelector({ pairs, selected, onSelect }) {
         color: "#f9fafb",
         cursor: "pointer",
         fontWeight: 600,
-        minWidth: 180,
+        minWidth: fullWidth ? 0 : 180,
+        width: fullWidth ? "100%" : undefined,
       }}
     >
       {pairs.map((pair) => (
