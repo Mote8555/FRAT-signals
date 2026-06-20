@@ -33,6 +33,10 @@ class FRATAlgorithm {
       "USD/CHF",
     ];
 
+    this.krakenCryptoPairs = this.cryptoPairs.filter(
+      p => !["MATIC/USDT", "UNI/USDT", "FIL/USDT"].includes(p)
+    );
+
     this.pairs = [...this.cryptoPairs, ...this.forexPairs];
 
     this.indicators = {
@@ -44,9 +48,10 @@ class FRATAlgorithm {
     };
   }
 
-  getPairs(market) {
-    if (market === "crypto") return this.cryptoPairs;
+  getPairs(market, source) {
     if (market === "forex") return this.forexPairs;
+    if (market === "crypto" && source === "kraken") return this.krakenCryptoPairs;
+    if (market === "crypto") return this.cryptoPairs;
     return this.pairs;
   }
 
@@ -161,6 +166,7 @@ class FRATAlgorithm {
       fundingData = null,
       validatingTrend = null,
       marketType = this.isForex(pair) ? "forex" : "crypto",
+      source = "binance",
     } = options;
 
     const kama = this.calculateKAMA(closes);
@@ -212,7 +218,7 @@ class FRATAlgorithm {
       btcFilter: btcResult,
       openInterest: oiResult,
       funding: fundingResult,
-    }, marketType);
+    }, marketType, source);
 
     if (!ConfidenceEngine.shouldTrade(confidence.grade)) return null;
 

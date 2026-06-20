@@ -7,6 +7,7 @@ const BTCFilter = require("./services/btc-filter.js");
 const FundingRateAnalyzer = require("./services/funding-rate.js");
 const OpenInterestAnalyzer = require("./services/open-interest.js");
 const BinanceExchange = require("./services/exchange/binance.js");
+const KrakenExchange = require("./services/exchange/kraken.js");
 const YahooFinanceProvider = require("./services/exchange/yahoo.js");
 
 const app = express();
@@ -16,22 +17,27 @@ app.use(cors());
 app.use(express.json());
 
 const binance = new BinanceExchange();
+const kraken = new KrakenExchange();
 const yahoo = new YahooFinanceProvider();
+
+const cryptoExchanges = { binance, kraken };
 
 const TIMEFRAMES = ["15m", "1h", "4h", "1d"];
 const TF_LIMITS = { "15m": 300, "1h": 300, "4h": 200, "1d": 200 };
 const TF_MIN_CANDLES = { "15m": 200, "1h": 200, "4h": 150, "1d": 100 };
 
-function getExchange(symbol) {
-  return algo.isForex(symbol) ? yahoo : binance;
+function getExchange(symbol, source = "binance") {
+  if (algo.isForex(symbol)) return yahoo;
+  return cryptoExchanges[source] || binance;
 }
 
 function getMarketType(symbol) {
   return algo.isForex(symbol) ? "forex" : "crypto";
 }
 
-function getDataSource(symbol) {
-  return algo.isForex(symbol) ? yahoo.name : "Binance";
+function getDataSource(source = "binance") {
+  if (source === "kraken") return kraken.name;
+  return "Binance";
 }
 
 function candleDataFromOHLCV(ohlcv) {
@@ -44,25 +50,25 @@ function candleDataFromOHLCV(ohlcv) {
   };
 }
 
-async function fetchCandleData(symbol, timeframe = "1h", limit = 300) {
-  const exchange = getExchange(symbol);
+async function fetchCandleData(symbol, timeframe = "1h", limit = 300, source = "binance") {
+  const exchange = getExchange(symbol, source);
   const ohlcv = await exchange.fetchOHLCV(symbol, timeframe, limit);
   if (!ohlcv || ohlcv.length < (TF_MIN_CANDLES[timeframe] || 200)) return null;
   return candleDataFromOHLCV(ohlcv);
 }
 
-async function analyzeTimeframe(symbol, timeframe, btcCandleData) {
+async function analyzeTimeframe(symbol, timeframe, btcCandleData, source = "binance") {
   const limit = TF_LIMITS[timeframe] || 300;
-  const candleData = await fetchCandleData(symbol, timeframe, limit);
+  const candleData = await fetchCandleData(symbol, timeframe, limit, source);
   if (!candleData) return null;
 
   const trend = TimeframeFilter.evaluateTrend(candleData.closes, 20);
 
-  const options = { marketType: getMarketType(symbol) };
+  const options = { marketType: getMarketType(symbol), source };
   if (!algo.isForex(symbol) && btcCandleData) options.btcPrices = btcCandleData.closes;
 
   if (timeframe === "1h" || timeframe === "15m") {
-    const fourHourData = await fetchCandleData(symbol, "4h", 150);
+    const fourHourData = await fetchCandleData(symbol, "4h", 150, source);
     if (fourHourData) {
       const fourHourTrend = TimeframeFilter.evaluateTrend(fourHourData.closes, 60);
       options.validatingTrend = fourHourTrend;
@@ -83,7 +89,8 @@ async function analyzeTimeframe(symbol, timeframe, btcCandleData) {
 
 app.get("/api/pairs", (req, res) => {
   const market = req.query.market;
-  const pairs = market ? algo.getPairs(market) : algo.pairs;
+  const source = req.query.source || "binance";
+  const pairs = market ? algo.getPairs(market, source) : algo.pairs;
   res.json({ pairs });
 });
 
@@ -91,12 +98,13 @@ app.get("/api/regime/:pair(*)", async (req, res) => {
   try {
     const symbol = decodeURIComponent(req.params.pair).toUpperCase();
     if (!symbol.includes("/")) return res.status(400).json({ error: "Invalid symbol. Use format EUR/USD" });
+    const source = req.query.source || "binance";
 
-    const candleData = await fetchCandleData(symbol);
+    const candleData = await fetchCandleData(symbol, "1h", 300, source);
     if (!candleData) return res.status(503).json({ error: "Failed to fetch market data" });
 
     const regime = RegimeEngine.detectRegime(candleData.closes);
-    res.json({ pair: symbol, ...regime, marketType: getMarketType(symbol) });
+    res.json({ pair: symbol, ...regime, marketType: getMarketType(symbol), dataSource: getDataSource(source) });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -106,23 +114,21 @@ app.get("/api/signal/:pair(*)", async (req, res) => {
   try {
     const symbol = decodeURIComponent(req.params.pair).toUpperCase();
     if (!symbol.includes("/")) return res.status(400).json({ error: "Invalid symbol. Use format EUR/USD" });
+    const source = req.query.source || "binance";
 
-    const options = { marketType: getMarketType(symbol) };
+    const options = { marketType: getMarketType(symbol), source };
 
     if (!algo.isForex(symbol)) {
       const isBTC = symbol.startsWith("BTC/");
       const btcSymbol = isBTC ? symbol : "BTC/USDT";
-      const btcCandleData = await fetchCandleData(btcSymbol, "1h", 100);
+      const btcCandleData = await fetchCandleData(btcSymbol, "1h", 100, source);
       if (btcCandleData) options.btcPrices = btcCandleData.closes;
     }
 
-    const [candleData] = await Promise.all([
-      fetchCandleData(symbol),
-    ]);
-
+    const candleData = await fetchCandleData(symbol, "1h", 300, source);
     if (!candleData) return res.status(503).json({ error: "Failed to fetch market data" });
 
-    const fourHourData = await fetchCandleData(symbol, "4h", 150);
+    const fourHourData = await fetchCandleData(symbol, "4h", 150, source);
     if (fourHourData) {
       const fourHourTrend = TimeframeFilter.evaluateTrend(fourHourData.closes, 60);
       options.validatingTrend = fourHourTrend;
@@ -138,7 +144,7 @@ app.get("/api/signal/:pair(*)", async (req, res) => {
       timeframe: "1h",
       lastPrice: candleData.closes[candleData.closes.length - 1],
       marketType: getMarketType(symbol),
-      dataSource: getDataSource(symbol),
+      dataSource: getDataSource(source),
       timestamp: new Date().toISOString(),
     });
   } catch (err) {
@@ -150,6 +156,7 @@ app.get("/api/fractal/:pair(*)", async (req, res) => {
   try {
     const symbol = decodeURIComponent(req.params.pair).toUpperCase();
     if (!symbol.includes("/")) return res.status(400).json({ error: "Invalid symbol. Use format EUR/USD" });
+    const source = req.query.source || "binance";
 
     const isForex = algo.isForex(symbol);
     let btcCandleData = null;
@@ -157,18 +164,18 @@ app.get("/api/fractal/:pair(*)", async (req, res) => {
     if (!isForex) {
       const isBTC = symbol.startsWith("BTC/");
       const btcSymbol = isBTC ? symbol : "BTC/USDT";
-      btcCandleData = await fetchCandleData(btcSymbol, "1h", 100);
+      btcCandleData = await fetchCandleData(btcSymbol, "1h", 100, source);
     }
 
     const results = await Promise.all(
-      TIMEFRAMES.map(tf => analyzeTimeframe(symbol, tf, btcCandleData))
+      TIMEFRAMES.map(tf => analyzeTimeframe(symbol, tf, btcCandleData, source))
     );
 
     let fundingData = null;
     let oiData = null;
 
-    if (!isForex) {
-      const exchange = getExchange(symbol);
+    if (!isForex && source === "binance") {
+      const exchange = getExchange(symbol, source);
       try {
         const raw = await exchange.fetchFundingRate(symbol);
         if (raw && typeof raw === 'number') {
@@ -216,7 +223,7 @@ app.get("/api/fractal/:pair(*)", async (req, res) => {
       fundingData,
       oiData,
       marketType: getMarketType(symbol),
-      dataSource: getDataSource(symbol),
+      dataSource: getDataSource(source),
       timestamp: new Date().toISOString(),
     });
   } catch (err) {
@@ -227,9 +234,10 @@ app.get("/api/fractal/:pair(*)", async (req, res) => {
 app.get("/api/status", (req, res) => {
   res.json({
     status: "ok",
-    cryptoPairs: algo.cryptoPairs.length,
+    cryptoPairs: { binance: algo.cryptoPairs.length, kraken: algo.krakenCryptoPairs.length },
     forexPairs: algo.forexPairs.length,
     totalPairs: algo.pairs.length,
+    exchanges: ["binance", "kraken"],
   });
 });
 

@@ -8,8 +8,14 @@ const MARKETS = [
   { key: "forex", label: "Forex" },
 ];
 
+const SOURCES = [
+  { key: "binance", label: "Binance" },
+  { key: "kraken", label: "Kraken" },
+];
+
 export default function App() {
   const [market, setMarket] = useState("crypto");
+  const [source, setSource] = useState("binance");
   const [pairs, setPairs] = useState([]);
   const [selected, setSelected] = useState("BTC/USDT");
   const [data, setData] = useState(null);
@@ -17,7 +23,8 @@ export default function App() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetchPairs(market)
+    const s = market === "forex" ? null : source;
+    fetchPairs(market, s)
       .then((list) => {
         setPairs(list);
         if (!list.includes(selected)) setSelected(list[0]);
@@ -29,13 +36,14 @@ export default function App() {
         setPairs(fallback);
         if (!fallback.includes(selected)) setSelected(fallback[0]);
       });
-  }, [market]);
+  }, [market, source]);
 
   const loadFractal = useCallback(async (pair) => {
     setLoading(true);
     setError(null);
     try {
-      const result = await fetchFractal(pair);
+      const s = market === "forex" ? null : source;
+      const result = await fetchFractal(pair, s);
       setData(result);
     } catch (err) {
       setError(err.message);
@@ -43,7 +51,7 @@ export default function App() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [source, market]);
 
   useEffect(() => {
     loadFractal(selected);
@@ -123,6 +131,37 @@ export default function App() {
             alignItems: "center",
           }}
         >
+          {market === "crypto" && (
+            <div
+              style={{
+                display: "flex",
+                gap: 2,
+                background: "#1f2937",
+                borderRadius: 6,
+                padding: 2,
+              }}
+            >
+              {SOURCES.map((s) => (
+                <button
+                  key={s.key}
+                  onClick={() => setSource(s.key)}
+                  style={{
+                    padding: "6px 12px",
+                    borderRadius: 5,
+                    border: "none",
+                    background: source === s.key ? "#3b82f6" : "transparent",
+                    color: source === s.key ? "#fff" : "#9ca3af",
+                    fontWeight: 600,
+                    fontSize: 12,
+                    cursor: "pointer",
+                    transition: "all 0.15s",
+                  }}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          )}
           <PairSelector
             pairs={pairs}
             selected={selected}

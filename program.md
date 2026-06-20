@@ -7,12 +7,14 @@ A production-grade cryptocurrency and forex trading engine using a fractal regim
 ```
                ┌──────────────────────────────────┐
                │        Market Type Router         │
-               │  (crypto → Binance, forex → Yahoo)│
+               │  (crypto → user choice,           │
+               │   forex → Yahoo)                  │
                └──────┬─────────────────────┬─────┘
                       │                     │
               ┌───────▼───────┐     ┌───────▼───────┐
               │  Binance API   │     │  Yahoo Finance  │
-              │  (crypto)      │     │  (forex)        │
+              │  or Kraken API │     │  (forex)        │
+              │  (crypto)      │     │                │
               └───────┬───────┘     └───────┬───────┘
                       │                     │
               ┌───────┼─────────────────────┼───────┐
@@ -67,6 +69,7 @@ frat-signals/
 │   ├── database.js                  # SQLite trade journal (with in-memory fallback)
 │   └── exchange/
 │       ├── binance.js               # CCXT Binance futures wrapper (crypto)
+│       ├── kraken.js                # CCXT Kraken spot adapter (crypto, no OI/funding)
 │       ├── yahoo.js                 # Yahoo Finance OHLCV provider (forex)
 │       └── bybit.js                 # CCXT Bybit futures wrapper
 │
@@ -130,10 +133,11 @@ Entry conditions (all must pass):
 
 ### Supported Pairs (by market type)
 
-- **Crypto** (15): BTC/USDT, ETH/USDT, SOL/USDT, BNB/USDT, XRP/USDT, ADA/USDT, DOGE/USDT, AVAX/USDT, DOT/USDT, LINK/USDT, MATIC/USDT, UNI/USDT, ATOM/USDT, LTC/USDT, FIL/USDT
+- **Crypto — Binance** (15): BTC/USDT, ETH/USDT, SOL/USDT, BNB/USDT, XRP/USDT, ADA/USDT, DOGE/USDT, AVAX/USDT, DOT/USDT, LINK/USDT, MATIC/USDT, UNI/USDT, ATOM/USDT, LTC/USDT, FIL/USDT
+- **Crypto — Kraken** (12): BTC/USDT, ETH/USDT, SOL/USDT, BNB/USDT, XRP/USDT, ADA/USDT, DOGE/USDT, AVAX/USDT, DOT/USDT, LINK/USDT, ATOM/USDT, LTC/USDT (MATIC, UNI, FIL not available)
 - **Forex** (7 majors): EUR/USD, GBP/USD, USD/JPY, AUD/USD, USD/CAD, NZD/USD, USD/CHF
 
-API helpers: `getPairs(market)` returns the appropriate list; `isForex(pair)` returns true for forex pairs.
+API helpers: `getPairs(market, source)` returns the appropriate list; `isForex(pair)` returns true for forex pairs.
 
 ### Signal Output
 
@@ -229,7 +233,7 @@ Perpetual futures funding rate sentiment analyzer.
 
 ### `services/confidence-engine.js`
 
-Dual-weight composite scoring system. The `score()` function accepts a `marketType` parameter (`"crypto"` or `"forex"`) to select the appropriate weight set.
+Triple-weight composite scoring system. The `score()` function accepts `marketType` (`"crypto"` or `"forex"`) and `source` (`"binance"` or `"kraken"`) to select the appropriate weight set.
 
 **Crypto weights** (same as original):
 
@@ -252,6 +256,17 @@ Dual-weight composite scoring system. The `score()` function accepts a `marketTy
 | BTC Filter | 0 | N/A for forex |
 | Open Interest | 0 | N/A for forex |
 | Funding | 0 | N/A for forex |
+
+**Kraken spot weights** (used for Kraken crypto data — no OI or funding available):
+
+| Component | Weight | Score Source |
+|-----------|--------|-------------|
+| Regime | 30 | TRENDING=100, MEAN_REVERTING=40, RANDOM=10 |
+| Trend | 25 | BULLISH/BEARISH=90, NEUTRAL=50 |
+| Momentum | 25 | MACD direction + T3 slope magnitude (relative to price) |
+| BTC Filter | 20 | Score from BTC filter |
+| Open Interest | 0 | N/A for Kraken spot |
+| Funding | 0 | N/A for Kraken spot |
 
 **Momentum thresholds** are computed relative to current price (`Math.abs(t3Slope / currentPrice)`) so the same thresholds work across assets of vastly different price scales (BTC ~$60k vs EUR/USD ~1.1).
 
@@ -309,6 +324,18 @@ fetchBalance()
 
 Both default to futures (`defaultType: "future"`) with rate limiting.
 
+### `services/exchange/kraken.js`
+
+Kraken spot CCXT adapter. Used as an alternative crypto data source (no geographic restrictions). Has the same async API but with limited ancillary data:
+
+```js
+fetchOHLCV(symbol, timeframe, limit)    // → [{open, high, low, close, volume}]
+fetchFundingRate(symbol)                 // → null (not available on Kraken spot)
+fetchOpenInterest(symbol)                // → null (not available on Kraken spot)
+```
+
+**Key differences from Binance**: Only 12 of the 15 crypto pairs are available (MATIC/USDT, UNI/USDT, FIL/USDT missing). No funding rate or open interest data, so Kraken calls use `cryptoSpotWeights` in the confidence engine (regime=30, trend=25, momentum=25, btcFilter=20).
+
 ### `services/exchange/yahoo.js`
 
 Yahoo Finance OHLCV provider using the `yahoo-finance2` package. Used as the data source for forex pairs. Exposes a subset of the exchange API:
@@ -351,19 +378,19 @@ Computes from trade list:
 
 ## Web API — `server.js`
 
-Express server on port 3001. Routes requests to the appropriate exchange based on market type (crypto → Binance, forex → Yahoo Finance).
+Express server on port 3001. Routes requests to the appropriate exchange based on market type: forex → Yahoo Finance, crypto → user-specified source (Binance or Kraken).
 
 ### `GET /api/pairs`
-Returns the list of supported trading pairs. Accepts optional `?market=crypto` or `?market=forex` query parameter to filter. Default (no param) returns all pairs.
+Returns the list of supported trading pairs. Accepts `?market=crypto|forex` and `?source=binance|kraken` query parameters. Kraken returns 12 pairs (MATIC, UNI, FIL excluded). Default returns all pairs.
 
 ### `GET /api/regime/:pair`
-Fetches 300 hourly candles from the appropriate exchange, runs regime detection. Returns `{ pair, regime, hurst, dfa, confidence, marketType, dataSource }`.
+Fetches 300 hourly candles from the appropriate exchange. Accepts `?source=binance|kraken`. Returns `{ pair, regime, hurst, dfa, confidence, marketType, dataSource }`.
 
 ### `GET /api/signal/:pair`
-Fetches live data, runs full signal pipeline. Returns `{ pair, signal, regime, timeframe, lastPrice, marketType, dataSource, timestamp }`. Signal is `null` when no trade conditions are met. Forex responses omit `btcFilter`.
+Fetches live data, runs full signal pipeline. Accepts `?source=binance|kraken`. Returns `{ pair, signal, regime, timeframe, lastPrice, marketType, dataSource, timestamp }`. Signal is `null` when no trade conditions are met. Forex responses omit `btcFilter`.
 
 ### `GET /api/fractal/:pair`
-Fetches all 4 timeframes (15m, 1h, 4h, 1d) in parallel from the appropriate exchange, runs the full signal pipeline on each, and returns a combined result with confluence stats.
+Fetches all 4 timeframes (15m, 1h, 4h, 1d) in parallel from the appropriate exchange. Accepts `?source=binance|kraken`. Runs the full signal pipeline on each and returns a combined result with confluence stats.
 
 **Crypto response**:
 ```json
@@ -424,7 +451,8 @@ Health check — returns `{ status: "ok", pairs: { total: 22, crypto: 15, forex:
 
 Vite + React SPA with dark theme. Features:
 - **Market Tabs**: Crypto / Forex tab bar to switch between asset classes
-- **Pair Selector**: Dropdown filtered by selected market tab (15 crypto pairs or 7 forex majors)
+- **Data Source Selector**: Binance / Kraken toggle when Crypto tab is active (forex always uses Yahoo Finance)
+- **Pair Selector**: Dropdown filtered by selected market tab and data source (15 Binance pairs, 12 Kraken pairs, or 7 forex majors)
 - **Signal Card**: BUY/SELL badge, entry price, SL/TP with % change, regime strength, Hurst/DFA
 - **Regime Badge**: Color-coded pill (green=TRENDING, yellow=RANDOM, red=MEAN_REVERTING)
 - **Confidence Meter**: SVG ring gauge (score 0-100, scalable via `size` prop) with letter grade
@@ -472,15 +500,15 @@ npm run server
 
 ## Data Flow
 
-### Crypto flow
+### Crypto flow (Binance source)
 ```
-User selects Crypto tab → picks BTC/USDT
+User selects Crypto tab → source=Binance → picks BTC/USDT
        │
        ▼
-React frontend → GET /api/fractal/BTC%2FUSDT
+React frontend → GET /api/fractal/BTC%2FUSDT?source=binance
        │
        ▼
-Express server (isForex=false → Binance)
+Express server (isForex=false, source=binance → BinanceExchange)
        │
        ├─→ Binance.fetchOHLCV("BTC/USDT", "15m", 300) ──┐
        ├─→ Binance.fetchOHLCV("BTC/USDT", "1h", 300)  ──┤
@@ -495,7 +523,8 @@ Express server (isForex=false → Binance)
        │   │     ├── Regime check (must be TRENDING)
        │   │     ├── Timeframe filter (must not be NEUTRAL)
        │   │     ├── BTC filter evaluation (once)
-       │   │     ├── Confidence engine (crypto weights) scoring (must be ≥ 60)
+       │   │     ├── Confidence engine (binance weights) scoring (must be ≥ 60)
+       │   │     ├── Funding rate & OI fetched (Binance futures)
        │   │     └── Adaptive SL/TP based on regime strength
        │   │
        ▼   ▼
@@ -508,6 +537,45 @@ JSON response → React renders FractalSignals (2×2 grid)
 
 Confluence bar: bullishCount/bearishCount/neutralCount
 Data source footer: "Data: Binance"
+```
+
+### Crypto flow (Kraken source)
+```
+User selects Crypto tab → source=Kraken → picks SOL/USDT
+       │
+       ▼
+React frontend → GET /api/fractal/SOL%2FUSDT?source=kraken
+       │
+       ▼
+Express server (isForex=false, source=kraken → KrakenExchange)
+       │
+       ├─→ Kraken.fetchOHLCV("SOL/USDT", "15m", 300) ──┐
+       ├─→ Kraken.fetchOHLCV("SOL/USDT", "1h", 300)  ──┤
+       ├─→ Kraken.fetchOHLCV("SOL/USDT", "4h", 200)  ──┤  Promise.all
+       └─→ Kraken.fetchOHLCV("SOL/USDT", "1d", 200)  ──┘
+       │                                                   
+       ▼                    ┌──────────────────────────────┘
+       │ For each timeframe:
+       │   │ → RegimeEngine.detectRegime(closes)
+       │   │ → FRATAlgorithm.generateSignal(candleData)
+       │   │     ├── KAMA / T3 / VW-MACD / ATR calculation
+       │   │     ├── Regime check (must be TRENDING)
+       │   │     ├── Timeframe filter (must not be NEUTRAL)
+       │   │     ├── BTC filter evaluation (once)
+       │   │     ├── Confidence engine (kraken spot weights) scoring (must be ≥ 60)
+       │   │     └── Adaptive SL/TP based on regime strength
+       │   │     (No funding rate / OI — spot exchange)
+       │   │
+       ▼   ▼
+JSON response → React renders FractalSignals (2×2 grid)
+                      │
+                      ├── TimeframeCard 15m
+                      ├── TimeframeCard 1h
+                      ├── TimeframeCard 4h
+                      └── TimeframeCard 1d
+
+Confluence bar: bullishCount/bearishCount/neutralCount
+Data source footer: "Data: Kraken"
 ```
 
 ### Forex flow
@@ -556,7 +624,8 @@ Data source footer: "Data: Yahoo Finance"
 - Min/max position sizes: 0.001 / 10.0 (in `RiskEngine` constructor)
 
 ### Confidence Weights (in `services/confidence-engine.js`)
-- **Crypto**: Regime: 25, Trend: 20, Momentum: 20, BTC Filter: 15, OI: 10, Funding: 10
+- **Crypto (Binance)**: Regime: 25, Trend: 20, Momentum: 20, BTC Filter: 15, OI: 10, Funding: 10
+- **Crypto (Kraken)**: Regime: 30, Trend: 25, Momentum: 25, BTC Filter: 20, OI: 0, Funding: 0
 - **Forex**: Regime: 30, Trend: 30, Momentum: 25, BTC Filter: 0, OI: 0, Funding: 0
 
 ### Exchange API Keys (in `server.js` or when instantiating exchanges)
@@ -566,7 +635,7 @@ Binance and Bybit adapters accept `{ apiKey, secret }` in constructor. Public en
 
 ## Code Conventions
 
-- **Exports**: Service modules export singleton instances (`module.exports = new ClassName()`) where stateless; constructors exported where stateful (`RiskEngine`, `SignalDatabase`, `BinanceExchange`, `BybitExchange`, `YahooFinanceProvider`).
+- **Exports**: Service modules export singleton instances (`module.exports = new ClassName()`) where stateless; constructors exported where stateful (`RiskEngine`, `SignalDatabase`, `BinanceExchange`, `KrakenExchange`, `BybitExchange`, `YahooFinanceProvider`).
 - **Error handling**: All exchange methods use try/catch and return null on failure. API endpoints return 400/500 JSON errors.
 - **Null returns**: Indicator methods return `null` on insufficient data rather than throwing. `generateSignal` returns `null` when conditions aren't met.
 - **Rounding**: Prices, scores, and sizes are rounded to reasonable precision (2-4 decimal places).

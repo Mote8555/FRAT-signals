@@ -17,10 +17,26 @@ class ConfidenceEngine {
       openInterest: 0,
       funding: 0,
     };
+
+    this.cryptoSpotWeights = {
+      regime: 30,
+      trend: 25,
+      momentum: 25,
+      btcFilter: 20,
+      openInterest: 0,
+      funding: 0,
+    };
   }
 
-  score(inputs, marketType = "crypto") {
-    const weights = marketType === "forex" ? this.forexWeights : this.weights;
+  score(inputs, marketType = "crypto", source = "binance") {
+    let weights;
+    if (marketType === "forex") {
+      weights = this.forexWeights;
+    } else if (source === "kraken") {
+      weights = this.cryptoSpotWeights;
+    } else {
+      weights = this.weights;
+    }
     let totalScore = 0;
     let totalWeight = 0;
 
