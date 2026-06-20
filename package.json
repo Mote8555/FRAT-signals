@@ -1,0 +1,20 @@
+{
+  "name": "frat-signals",
+  "version": "1.0.0",
+  "description": "FRAT Signals - Fractal Regime-Adaptive Trading System",
+  "scripts": {
+    "server": "node server.js",
+    "client": "npm run dev --prefix client",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "install:all": "npm install && npm install --prefix client"
+  },
+  "dependencies": {
+    "ccxt": "^4.0.0",
+    "cors": "^2.8.5",
+    "express": "^4.18.0",
+    "yahoo-finance2": "^3.15.3"
+  },
+  "devDependencies": {
+    "concurrently": "^8.0.0"
+  }
+}
