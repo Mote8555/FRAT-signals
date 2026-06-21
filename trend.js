@@ -21,6 +21,8 @@ class FRATAlgorithm {
       "ATOM/USDT",
       "LTC/USDT",
       "FIL/USDT",
+      "BCH/USDT",
+      "ZEC/USDT",
     ];
 
     this.forexPairs = [
@@ -34,7 +36,7 @@ class FRATAlgorithm {
     ];
 
     this.krakenCryptoPairs = this.cryptoPairs.filter(
-      p => !["MATIC/USDT", "UNI/USDT", "FIL/USDT"].includes(p)
+      p => !["MATIC/USDT", "UNI/USDT", "FIL/USDT", "ZEC/USDT"].includes(p)
     );
 
     this.pairs = [...this.cryptoPairs, ...this.forexPairs];

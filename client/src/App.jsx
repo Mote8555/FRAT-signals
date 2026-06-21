@@ -34,7 +34,7 @@ export default function App() {
       .catch(() => {
         const fallback = market === "forex"
           ? ["EUR/USD", "GBP/USD", "USD/JPY"]
-          : ["BTC/USDT", "ETH/USDT", "SOL/USDT"];
+          : ["BTC/USDT", "ETH/USDT", "SOL/USDT", "BCH/USDT"];
         setPairs(fallback);
         if (!fallback.includes(selected)) setSelected(fallback[0]);
       });
