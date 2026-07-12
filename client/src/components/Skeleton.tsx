@@ -11,7 +11,7 @@ export default function Skeleton() {
 
       <div className="h-1 w-full bg-gray-800 rounded-sm mb-5" />
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {Array.from({ length: 4 }).map((_, i) => (
           <div
             key={i}
@@ -24,6 +24,7 @@ export default function Skeleton() {
             <div className="flex items-center justify-center py-2">
               <div className="h-10 w-20 bg-gray-800 rounded-md" />
             </div>
+            <div className="h-8 w-full bg-gray-800 rounded" />
             <div className="flex gap-2">
               <div className="flex-1">
                 <div className="h-2.5 w-8 bg-gray-800 rounded mb-1" />
@@ -41,6 +42,7 @@ export default function Skeleton() {
             <div className="flex justify-center">
               <div className="h-16 w-16 bg-gray-800 rounded-full" />
             </div>
+            <div className="h-5 w-full bg-gray-800 rounded" />
           </div>
         ))}
       </div>

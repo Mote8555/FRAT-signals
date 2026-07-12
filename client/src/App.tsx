@@ -80,13 +80,18 @@ export default function App() {
           <button
             onClick={() => loadFractal(selected)}
             disabled={loading}
-            className="px-5 py-2.5 rounded-lg bg-blue-500 text-white font-semibold text-sm border-0 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+            className="px-5 py-2.5 rounded-lg bg-blue-500 text-white font-semibold text-sm border-0 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer hover:bg-blue-600 active:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 transition-colors"
           >
-            {loading ? "..." : "Refresh"}
+            {loading ? (
+              <svg className="animate-spin h-4 w-4 mx-auto" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+            ) : "Refresh"}
           </button>
         </div>
 
-        <FractalSignals data={data} loading={loading} error={error} />
+        <FractalSignals data={data} loading={loading} error={error} onRetry={() => loadFractal(selected)} />
       </div>
     </div>
   );
