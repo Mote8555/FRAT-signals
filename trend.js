@@ -16,30 +16,12 @@ class FRATAlgorithm {
       "AVAX/USDT",
       "DOT/USDT",
       "LINK/USDT",
-      "MATIC/USDT",
-      "UNI/USDT",
       "ATOM/USDT",
       "LTC/USDT",
-      "FIL/USDT",
       "BCH/USDT",
-      "ZEC/USDT",
     ];
 
-    this.forexPairs = [
-      "EUR/USD",
-      "GBP/USD",
-      "USD/JPY",
-      "AUD/USD",
-      "USD/CAD",
-      "NZD/USD",
-      "USD/CHF",
-    ];
-
-    this.krakenCryptoPairs = this.cryptoPairs.filter(
-      p => !["MATIC/USDT", "UNI/USDT", "FIL/USDT", "ZEC/USDT"].includes(p)
-    );
-
-    this.pairs = [...this.cryptoPairs, ...this.forexPairs];
+    this.pairs = [...this.cryptoPairs];
 
     this.indicators = {
       baseline: { name: "KAMA", period: 10, fast: 2, slow: 30 },
@@ -50,15 +32,8 @@ class FRATAlgorithm {
     };
   }
 
-  getPairs(market, source) {
-    if (market === "forex") return this.forexPairs;
-    if (market === "crypto" && source === "kraken") return this.krakenCryptoPairs;
-    if (market === "crypto") return this.cryptoPairs;
-    return this.pairs;
-  }
-
-  isForex(pair) {
-    return this.forexPairs.includes(pair);
+  getPairs() {
+    return this.cryptoPairs;
   }
 
   calculateKAMA(prices, period = 10, fast = 2, slow = 30) {
@@ -164,11 +139,7 @@ class FRATAlgorithm {
     const { opens, highs, lows, closes, volumes } = candleData;
     const {
       btcPrices = null,
-      oiData = null,
-      fundingData = null,
       validatingTrend = null,
-      marketType = this.isForex(pair) ? "forex" : "crypto",
-      source = "binance",
     } = options;
 
     const kama = this.calculateKAMA(closes);
@@ -199,28 +170,16 @@ class FRATAlgorithm {
       if (tfTrend !== validatingTrend) return null;
     }
 
-    const btcResult = marketType === "forex"
-      ? { btcTrend: "NEUTRAL", score: 50 }
-      : btcPrices
-        ? BTCFilter.evaluate(btcPrices)
-        : BTCFilter.evaluate(closes);
-
-    const oiResult = marketType === "forex"
-      ? { trend: "NEUTRAL", strength: 0 }
-      : oiData || { trend: "NEUTRAL", strength: 50 };
-
-    const fundingResult = marketType === "forex"
-      ? { fundingRate: 0, sentiment: "NEUTRAL" }
-      : fundingData || { fundingRate: 0, sentiment: "NEUTRAL" };
+    const btcResult = btcPrices
+      ? BTCFilter.evaluate(btcPrices)
+      : BTCFilter.evaluate(closes);
 
     const confidence = ConfidenceEngine.score({
       regime: regime.regime,
       trend: tfTrend,
       momentum: { macdBullish, t3Slope, currentPrice },
       btcFilter: btcResult,
-      openInterest: oiResult,
-      funding: fundingResult,
-    }, marketType, source);
+    });
 
     if (!ConfidenceEngine.shouldTrade(confidence.grade)) return null;
 

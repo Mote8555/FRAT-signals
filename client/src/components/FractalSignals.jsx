@@ -145,7 +145,7 @@ export default function FractalSignals({ data, loading, error }) {
           marginTop: 16,
         }}
       >
-        Auto-refreshes every 60s · Data: {data?.dataSource || "Binance"}
+        Auto-refreshes every 60s · Data: Kraken
       </div>
     </div>
   );
