@@ -1,6 +1,11 @@
-import React from "react";
+import type { Confidence } from "../api";
 
-const gradeColors = {
+interface ConfidenceMeterProps {
+  confidence: Confidence;
+  size?: number;
+}
+
+const gradeColors: Record<string, string> = {
   "A+": "#22c55e",
   A: "#16a34a",
   B: "#eab308",
@@ -8,7 +13,7 @@ const gradeColors = {
   IGNORE: "#ef4444",
 };
 
-export default function ConfidenceMeter({ confidence, size = 100 }) {
+export default function ConfidenceMeter({ confidence, size = 100 }: ConfidenceMeterProps) {
   if (!confidence) return null;
   const { score, grade } = confidence;
   const color = gradeColors[grade] || "#6b7280";
@@ -22,9 +27,16 @@ export default function ConfidenceMeter({ confidence, size = 100 }) {
   const labelFont = size * 0.12;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+    <div className="flex flex-col items-center">
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#374151" strokeWidth={strokeW} />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          stroke="#374151"
+          strokeWidth={strokeW}
+        />
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -38,14 +50,30 @@ export default function ConfidenceMeter({ confidence, size = 100 }) {
           transform={`rotate(-90 ${size / 2} ${size / 2})`}
           style={{ transition: "stroke-dashoffset 0.5s ease" }}
         />
-        <text x={size / 2} y={size * 0.48} textAnchor="middle" fill="#f9fafb" fontSize={scoreFont} fontWeight="bold">
+        <text
+          x={size / 2}
+          y={size * 0.48}
+          textAnchor="middle"
+          fill="#f9fafb"
+          fontSize={scoreFont}
+          fontWeight="bold"
+        >
           {score}
         </text>
-        <text x={size / 2} y={size * 0.64} textAnchor="middle" fill={color} fontSize={gradeFont} fontWeight="bold">
+        <text
+          x={size / 2}
+          y={size * 0.64}
+          textAnchor="middle"
+          fill={color}
+          fontSize={gradeFont}
+          fontWeight="bold"
+        >
           {grade}
         </text>
       </svg>
-      <div style={{ fontSize: labelFont, color: "#9ca3af", marginTop: size * 0.04 }}>Confidence</div>
+      <div className="text-gray-400 mt-1" style={{ fontSize: labelFont }}>
+        Confidence
+      </div>
     </div>
   );
 }
