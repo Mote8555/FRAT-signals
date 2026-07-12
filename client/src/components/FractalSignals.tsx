@@ -41,7 +41,7 @@ export default function FractalSignals({ data, loading, error, onRetry }: Fracta
 
   if (error) {
     return (
-      <div className="flex flex-col items-center gap-4 text-center text-red-500 p-10 bg-gray-900 rounded-xl border border-gray-800">
+      <div className="flex flex-col items-center gap-4 text-center text-red-500 p-10 bg-gray-900 rounded-xl border border-slate-800/60">
         <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <circle cx="12" cy="12" r="10" />
           <line x1="12" y1="8" x2="12" y2="12" />
@@ -50,7 +50,7 @@ export default function FractalSignals({ data, loading, error, onRetry }: Fracta
         <span>{error}</span>
         <button
           onClick={onRetry}
-          className="px-4 py-2 rounded-lg bg-red-500/20 text-red-400 font-semibold text-sm border border-red-500/30 cursor-pointer hover:bg-red-500/30 active:bg-red-500/40 focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 transition-colors"
+          className="px-4 py-2 rounded-lg bg-red-500/20 text-red-400 font-semibold text-sm border border-red-500/30 cursor-pointer hover:bg-red-500/30 active:bg-red-500/40 focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 transition-colors"
         >
           Retry
         </button>
@@ -60,7 +60,7 @@ export default function FractalSignals({ data, loading, error, onRetry }: Fracta
 
   if (!data) {
     return (
-      <div className="text-center text-gray-500 p-10 bg-gray-900 rounded-xl border border-gray-800">
+      <div className="text-center text-gray-500 p-10 bg-gray-900 rounded-xl border border-slate-800/60">
         Select a pair to view fractal signals
       </div>
     );
@@ -71,7 +71,7 @@ export default function FractalSignals({ data, loading, error, onRetry }: Fracta
   const con = getConfluenceLabel(bullishCount, bearishCount, neutralCount);
 
   return (
-    <div className={`bg-gray-900 rounded-xl border border-gray-800 ${isMobile ? "p-3.5" : "p-5"}`}>
+    <div className={`bg-gray-900 rounded-xl border border-slate-800/60 ${isMobile ? "p-3.5" : "p-5"}`}>
       <div
         className={`flex ${isMobile ? "flex-col gap-2" : "flex-row justify-between items-center"} mb-4`}
       >
@@ -81,7 +81,7 @@ export default function FractalSignals({ data, loading, error, onRetry }: Fracta
           </span>
           {btcFilter && (
             <span
-              className={`ml-2.5 text-[11px] px-2.5 py-0.5 rounded-full bg-gray-800 ${
+              className={`ml-2.5 text-[11px] px-2.5 py-0.5 rounded-full bg-slate-800 ${
                 btcFilter.btcTrend === "BULLISH"
                   ? "text-green-500"
                   : btcFilter.btcTrend === "BEARISH"
@@ -98,7 +98,7 @@ export default function FractalSignals({ data, loading, error, onRetry }: Fracta
         </span>
       </div>
 
-      <div className="w-full h-1 bg-gray-800 rounded-sm mb-5 overflow-hidden flex">
+      <div className="w-full h-1 bg-slate-800 rounded-sm mb-5 overflow-hidden flex">
         {bullishCount > 0 && (
           <div className="bg-green-500" style={{ width: `${(bullishCount / 4) * 100}%` }} />
         )}

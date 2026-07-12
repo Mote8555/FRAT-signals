@@ -34,7 +34,7 @@ export default function ConfidenceMeter({ confidence, size = 100 }: ConfidenceMe
           cy={size / 2}
           r={r}
           fill="none"
-          stroke="#374151"
+          stroke="#334155"
           strokeWidth={strokeW}
         />
         <circle

@@ -41,7 +41,7 @@ export default function TimeframeCard({ tf, data }: TimeframeCardProps) {
   return (
     <div
       className={`bg-gray-900 rounded-[10px] flex flex-col gap-2 ${isMobile ? "p-3" : "p-4"} ${
-        hasSignal ? `border-[1.5px] ${signalBorder}` : "border border-gray-800"
+        hasSignal ? `border-[1.5px] ${signalBorder}` : "border border-slate-800/60"
       }`}
       style={
         hasSignal
@@ -123,7 +123,7 @@ export default function TimeframeCard({ tf, data }: TimeframeCardProps) {
       )}
 
       {regime && (
-        <div className="text-[11px] text-gray-600 text-center border-t border-gray-800 pt-2">
+        <div className="text-[11px] text-gray-600 text-center border-t border-slate-800/60 pt-2">
           H={regime.hurst} &middot; DFA={regime.dfa} &middot; conf={regime.confidence}%
         </div>
       )}

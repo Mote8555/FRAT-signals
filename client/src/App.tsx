@@ -50,14 +50,14 @@ export default function App() {
   }, [selected, loadFractal]);
 
   return (
-    <div className="min-h-screen bg-slate-900 text-gray-50 font-sans">
+    <div className="min-h-screen text-gray-50 font-sans">
       <Toaster
         position="top-right"
         toastOptions={{
           style: {
-            background: "#1f2937",
+            background: "#0f172a",
             color: "#f9fafb",
-            border: "1px solid #374151",
+            border: "1px solid #334155",
             fontSize: "14px",
           },
         }}
@@ -68,19 +68,19 @@ export default function App() {
           <div className="text-[13px] text-gray-500 mt-1">Fractal Regime-Adaptive Trading</div>
         </div>
 
-        <div
-          className={`flex ${isMobile ? "flex-col gap-2" : "flex-row gap-3"} mb-5 ${isMobile ? "items-stretch" : "items-center"}`}
-        >
-          <PairSelector
-            pairs={pairs}
-            selected={selected}
-            onSelect={setSelected}
-            fullWidth={isMobile}
-          />
-          <button
-            onClick={() => loadFractal(selected)}
-            disabled={loading}
-            className="px-5 py-2.5 rounded-lg bg-blue-500 text-white font-semibold text-sm border-0 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer hover:bg-blue-600 active:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 transition-colors"
+          <div
+            className={`flex ${isMobile ? "flex-col gap-2" : "flex-row gap-3"} ${isMobile ? "items-stretch" : "items-center"} mb-5`}
+          >
+            <PairSelector
+              pairs={pairs}
+              selected={selected}
+              onSelect={setSelected}
+              fullWidth={isMobile}
+            />
+            <button
+              onClick={() => loadFractal(selected)}
+              disabled={loading}
+              className="px-5 py-2.5 rounded-lg bg-blue-500 text-white font-semibold text-sm border-0 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer hover:bg-blue-600 active:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 transition-colors"
           >
             {loading ? (
               <svg className="animate-spin h-4 w-4 mx-auto" viewBox="0 0 24 24" fill="none">

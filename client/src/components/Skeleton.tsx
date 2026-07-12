@@ -1,6 +1,6 @@
 export default function Skeleton() {
   return (
-    <div className="bg-gray-900 rounded-xl border border-gray-800 p-5 animate-pulse">
+    <div className="bg-gray-900 rounded-xl border border-slate-800/60 p-5 animate-pulse">
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center gap-3">
           <div className="h-5 w-24 bg-gray-800 rounded" />
@@ -15,7 +15,7 @@ export default function Skeleton() {
         {Array.from({ length: 4 }).map((_, i) => (
           <div
             key={i}
-            className="bg-gray-900 rounded-[10px] border border-gray-800 p-4 flex flex-col gap-3"
+            className="bg-gray-900 rounded-[10px] border border-slate-800/60 p-4 flex flex-col gap-3"
           >
             <div className="flex justify-between">
               <div className="h-4 w-10 bg-gray-800 rounded" />
