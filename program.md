@@ -1,6 +1,6 @@
 # FRAT Signals — Fractal Regime-Adaptive Trading System
 
-A production-grade cryptocurrency trading engine using a fractal regime-adaptive methodology. Designed for Bitcoin, Ethereum, and major altcoins via the Kraken exchange.
+A fractal regime-adaptive cryptocurrency signal dashboard powered by the Kraken exchange (CCXT spot API). Generates multi-timeframe BUY/SELL signals from Hurst/DFA regime detection, KAMA/T3 trend analysis, VW-MACD momentum, and BTC market filtering. Displays results in a responsive React dark-theme SPA with auto-refresh.
 
 ## Architecture Overview
 
@@ -51,35 +51,44 @@ frat-signals/
 │
 ├── services/
 │   ├── regime-engine.js             # Hurst exponent, DFA, regime detection
-│   ├── timeframe-filter.js          # Multi-timeframe KAMA trend filter
+│   ├── timeframe-filter.js          # KAMA trend filter (single-period evaluation)
 │   ├── btc-filter.js                # Bitcoin market condition filter
 │   ├── confidence-engine.js         # Weighted component scoring + grade
-│   ├── risk-engine.js               # Position sizing (1% risk)
-│   ├── exit-engine.js               # Chandelier exit + trailing + partial TP
-│   ├── database.js                  # SQLite trade journal (with in-memory fallback)
+│   ├── risk-engine.js               # Position sizing (1% risk) — NOT YET WIRED
+│   ├── exit-engine.js               # Chandelier exit + trailing + partial TP — NOT YET WIRED
+│   ├── database.js                  # SQLite trade journal — NOT YET WIRED
 │   └── exchange/
 │       └── kraken.js                # CCXT Kraken spot wrapper
 │
 ├── backtesting/
-│   ├── engine.js                    # Historical simulation engine
-│   └── metrics.js                   # Performance statistics (Sharpe, Sortino, DD, CAGR)
+│   ├── engine.js                    # Historical simulation engine — NOT YET WIRED
+│   └── metrics.js                   # Performance statistics (Sharpe, Sortino, DD, CAGR) — NOT YET WIRED
 │
 └── client/
-    ├── package.json                 # Vite + React dependencies
+    ├── package.json                 # Vite + React 18 + TypeScript dependencies
+    ├── tsconfig.json                # Strict TypeScript config
     ├── vite.config.js               # Dev server with /api proxy to Express
-    ├── index.html                   # SPA entry point
+    ├── tailwind.config.js           # Tailwind with Inter font
+    ├── postcss.config.js            # PostCSS with Tailwind + Autoprefixer
+    ├── eslint.config.js             # Flat config: TypeScript + React hooks
+    ├── .prettierrc                  # Prettier config
+    ├── index.html                   # SPA entry point (Inter font, dark theme-color meta)
     └── src/
-        ├── main.jsx                 # ReactDOM entry
-        ├── App.jsx                  # Root component: pair selector, auto-refresh
-        ├── api.js                   # Fetch wrappers for REST endpoints
+        ├── main.tsx                 # ReactDOM entry with ErrorBoundary
+        ├── App.tsx                  # Root component: pair selector, auto-refresh
+        ├── api.ts                   # Fetch wrappers + TypeScript types
+        ├── index.css                # Tailwind directives + base layer
+        ├── useMediaQuery.ts         # Responsive hook
         └── components/
-            ├── PairSelector.jsx       # Trading pair dropdown
-            ├── FractalSignals.jsx     # 2×2 grid container + confluence bar + footer
-            ├── TimeframeCard.jsx      # Individual timeframe card
-            ├── SignalCard.jsx         # (legacy) Single-timeframe display
-            ├── RegimeBadge.jsx        # Color-coded regime pill
-            ├── ConfidenceMeter.jsx    # SVG ring gauge with score + grade
-            └── ComponentBreakdown.jsx # Stacked bar of weighted components
+            ├── PairSelector.tsx       # Searchable trading pair dropdown
+            ├── FractalSignals.tsx     # 2×2 grid container + confluence bar + footer
+            ├── TimeframeCard.tsx      # Individual timeframe card
+            ├── RegimeBadge.tsx        # Color-coded regime pill (UNUSED)
+            ├── ConfidenceMeter.tsx    # SVG ring gauge with score + grade
+            ├── ComponentBreakdown.tsx # Stacked bar of weighted components
+            ├── ErrorBoundary.tsx      # Class-based error boundary with retry
+            ├── Skeleton.tsx           # Loading skeleton (responsive 1/2-column grid)
+            └── Sparkline.tsx          # SVG area sparkline using recharts
 ```
 
 ---
@@ -97,17 +106,18 @@ The `FRATAlgorithm` class is the system's central orchestrator. It imports all s
 | **VW-MACD** (Volume-Weighted MACD) | Momentum + volume combo | fast=12, slow=26, signal=9 |
 | **ATR** (Average True Range) | Volatility measurement | period=14 |
 
-### Signal Generation — `generateSignal(pair, candleData)`
+### Signal Generation — `generateSignal(pair, candleData, options)`
 
 Entry conditions (all must pass):
 
 1. **Regime** → must be `"TRENDING"` (Hurst > 0.55)
 2. **Timeframe trend** → must not be `"NEUTRAL"`
-3. **Momentum** → VW-MACD line > signal line (for BUY), reverse for SELL
-4. **KAMA position** → price must be on correct side of KAMA
-5. **ATR proximity** → price within 1 ATR of KAMA
-6. **T3 slope** → positive for BUY, negative for SELL
-7. **Confidence** → weighted score must grade ≥ 60 (not "IGNORE")
+3. **Validating trend** (optional) → when supplied, must match the primary trend
+4. **Momentum** → VW-MACD line > signal line (for BUY), reverse for SELL
+5. **KAMA position** → price must be on correct side of KAMA
+6. **ATR proximity** → price within 1 ATR of KAMA
+7. **T3 slope** → positive for BUY, negative for SELL
+8. **Confidence** → weighted score must grade ≥ 60 (not "IGNORE")
 
 ### Adaptive TP/SL — `getAdaptiveTargets(atr, regime)`
 
@@ -145,6 +155,7 @@ BTC/USDT, ETH/USDT, SOL/USDT, BNB/USDT, XRP/USDT, ADA/USDT, DOGE/USDT, AVAX/USDT
   regimeStrength: "STRONG_TRENDING",
   hurst: 0.95,
   dfa: 1.7,
+  stopDistance: 88,
   timestamp: "2026-06-18T11:20:24.792Z"
 }
 ```
@@ -174,9 +185,11 @@ Detects market regime using two independent methods:
 
 ### `services/timeframe-filter.js`
 
-Evaluates trend using KAMA slope and price position relative to period average. Scores on three axes (SHORT=20, MEDIUM=60, LONG=120 periods) and classifies as BULLISH/BEARISH/NEUTRAL.
+Evaluates trend using KAMA slope and price position relative to period average. The `evaluateTrend(prices, period)` method scores on two axes (slope direction + price position), returning `"BULLISH"`, `"BEARISH"`, or `"NEUTRAL"`.
 
-**Entry gate**: BUY only if medium AND long term both BULLISH. SELL only if both BEARISH.
+Contains two unused methods:
+- `filter(prices15m, prices1H, prices4H, pricesDaily)` — multi-timeframe trend evaluation (not wired)
+- `isEntryAllowed(trend, side)` — entry gate based on medium + long term trend (not wired)
 
 ---
 
@@ -184,9 +197,11 @@ Evaluates trend using KAMA slope and price position relative to period average. 
 
 BTC market condition analyzer. Computes KAMA slope, price position vs KAMA and EMA20, and return volatility. Scores on a [0, 100] scale.
 
-**Rules**:
-- BTC BEARISH → block altcoin longs
-- BTC BULLISH → block altcoin shorts
+Contains two unused gates:
+- `blockAltcoinLongs(btcTrend)` — intended to block longs when BTC is bearish
+- `blockAltcoinShorts(btcTrend)` — intended to block shorts when BTC is bullish
+
+These gates are **not called** in the signal pipeline. The BTC filter currently only contributes to the confidence score.
 
 ---
 
@@ -207,10 +222,9 @@ Momentum thresholds are computed relative to current price (`Math.abs(t3Slope / 
 
 ---
 
-### `services/risk-engine.js`
+### `services/risk-engine.js` — NOT WIRED
 
 Position sizing based on fixed fractional risk:
-
 ```js
 riskAmount = accountBalance × riskPercent / 100
 positionSize = riskAmount / stopDistance
@@ -218,18 +232,22 @@ positionSize = riskAmount / stopDistance
 
 Regime-adjusted sizing: TRENDING/STRONG_TRENDING = 1.0×, WEAK_TRENDING = 0.5×, others = 0.25×.
 
+Exported as a class (constructor) but never imported in the current signal pipeline.
+
 ---
 
-### `services/exit-engine.js`
+### `services/exit-engine.js` — NOT WIRED
 
 Three-layer exit management:
 - **Chandelier Exit**: `recentHigh - 3×ATR` for longs, `recentLow + 3×ATR` for shorts
 - **ATR Trail**: 2×ATR trailing stop from highest/lowest since entry
 - **Partial Profit**: Take 50% off at 3R (3× risk), trail the remainder
 
+Exported as a singleton but never imported in the current signal pipeline.
+
 ---
 
-### `services/database.js`
+### `services/database.js` — NOT WIRED
 
 Persistence layer using `better-sqlite3` with automatic in-memory fallback. Tables:
 
@@ -239,6 +257,8 @@ Persistence layer using `better-sqlite3` with automatic in-memory fallback. Tabl
 | `trades` | id, signal_id, pair, side, entry/exit price, position_size, pnl, exit_reason, timestamps |
 | `regimes` | id, pair, regime, hurst, dfa, confidence, timestamp |
 | `performance` | id, total_trades, win_rate, profit_factor, sharpe_ratio, sortino_ratio, max_drawdown, cagr, total_return, timestamp |
+
+Exported as a class (constructor). `better-sqlite3` is not listed in `package.json` — will fall back to in-memory if not globally installed.
 
 ---
 
@@ -255,13 +275,15 @@ cancelOrder(orderId, symbol)
 fetchBalance()
 ```
 
+`placeOrder`, `cancelOrder`, and `fetchBalance` are available but **not currently called** — the system is signal-only with no automated execution.
+
 ---
 
-## Backtesting — `backtesting/`
+## Backtesting — NOT WIRED
 
 ### `backtesting/engine.js`
 
-Iterates over historical OHLCV data slice by slice, calling the strategy's `generateSignal()` at each step. Simulates position entry/exit with configurable commission (0.1%) and slippage (0.1%). Collects all trades and passes them to the metrics calculator.
+Iterates over historical OHLCV data slice by slice, calling the strategy's `generateSignal()` at each step. Simulates position entry/exit with configurable commission (0.1%) and slippage (0.1%).
 
 ### `backtesting/metrics.js`
 
@@ -277,6 +299,8 @@ Computes from trade list:
 | CAGR | (final/initial)^(1/years) - 1 |
 | Total Return | (final - initial) / initial × 100 |
 
+Both modules exist but are **not wired into any run script, CLI command, or API endpoint**.
+
 ---
 
 ## Web API — `server.js`
@@ -290,7 +314,7 @@ Returns the list of 13 supported crypto trading pairs.
 Fetches 300 hourly candles from Kraken. Returns `{ pair, regime, hurst, dfa, confidence }`.
 
 ### `GET /api/signal/:pair`
-Fetches live data, runs full signal pipeline. Returns `{ pair, signal, regime, timeframe, lastPrice, timestamp }`. Signal is `null` when no trade conditions are met.
+Fetches live data, runs full signal pipeline with BTC filter and 4h cross-validation. Returns `{ pair, signal, regime, timeframe, lastPrice, timestamp }`. Signal is `null` when no trade conditions are met.
 
 ### `GET /api/fractal/:pair`
 Fetches all 4 timeframes (15m, 1h, 4h, 1d) in parallel from Kraken. Runs the full signal pipeline on each and returns a combined result with confluence stats.
@@ -318,17 +342,46 @@ Health check — returns `{ status: "ok", pairs: 13, exchange: "Kraken" }`.
 
 ## React Frontend — `client/`
 
-Vite + React SPA with dark theme. Features:
-- **Pair Selector**: Dropdown with 13 Kraken pairs
-- **Signal Card**: BUY/SELL badge, entry price, SL/TP with % change, regime strength, Hurst/DFA
-- **Regime Badge**: Color-coded pill (green=TRENDING, yellow=RANDOM, red=MEAN_REVERTING)
-- **Confidence Meter**: SVG ring gauge (score 0-100, scalable via `size` prop) with letter grade
-- **Component Breakdown**: Horizontal stacked bar showing each weighted component
-- **Data Source Footer**: Shows "Data: Kraken" on FractalSignals
-- **Auto-Refresh**: Polls API every 60 seconds
-- **Refresh Button**: Manual trigger
-- **Fractal View**: 2×2 grid showing all 4 timeframes simultaneously
-- **Confluence Bar**: Aggregated signal alignment (e.g., "2/4 bullish")
+Vite + React 18 + TypeScript SPA with dark theme (3-layer depth: slate-950 background → gray-900 cards → slate-800 elevated surfaces).
+
+### Components
+
+| Component | File | Description |
+|-----------|------|-------------|
+| **App** | `src/App.tsx` | Root: pair selector, refresh button, 60s auto-refresh, toast notifications |
+| **PairSelector** | `src/components/PairSelector.tsx` | Searchable dropdown with keyboard nav, click-outside close |
+| **FractalSignals** | `src/components/FractalSignals.tsx` | 2×2 grid container header (pair, BTC badge, confluence label), confluence bar, footer |
+| **TimeframeCard** | `src/components/TimeframeCard.tsx` | Individual card: signal badge, sparkline, entry/SL/TP prices, confidence meter, breakdown, Hurst/DFA footer |
+| **ConfidenceMeter** | `src/components/ConfidenceMeter.tsx` | SVG ring gauge (score 0-100, scalable size) with letter grade |
+| **ComponentBreakdown** | `src/components/ComponentBreakdown.tsx` | Horizontal stacked bar + legend of weighted score components |
+| **Sparkline** | `src/components/Sparkline.tsx` | Recharts SVG area sparkline (buy=green, sell=red) |
+| **Skeleton** | `src/components/Skeleton.tsx` | Loading skeleton, responsive grid (1-col mobile, 2-col desktop) with sparkline + breakdown placeholders |
+| **ErrorBoundary** | `src/components/ErrorBoundary.tsx` | Class-based error boundary with try-again button |
+| **RegimeBadge** | `src/components/RegimeBadge.tsx` | Color-coded regime pill (**not currently used** — inline badge in TimeframeCard is used instead) |
+
+### Data & Utilities
+
+| File | Description |
+|------|-------------|
+| `src/api.ts` | `fetchPairs()`, `fetchFractal()`, TypeScript interfaces (FractalData, TimeframeData, Signal, Confidence, Regime, etc.) |
+| `src/useMediaQuery.ts` | React hook for responsive breakpoint matching |
+
+### Features
+- Pair search with filtered dropdown (13 Kraken pairs)
+- Per-timeframe signal badges (BUY/SELL) with glow effect
+- Adaptive TP/SL display with percentage change from entry
+- Regime pill (TRENDING/RANDOM/MEAN_REVERTING/UNKNOWN) per card
+- Sparkline area chart per card when signal exists
+- Confidence ring gauge (score + letter grade) per card
+- Score breakdown bar (weighted component visualization)
+- Confluence bar + label (e.g. "STRONG BULLISH (3/4)")
+- BTC market condition badge
+- 60-second auto-refresh
+- Animated loading spinner on manual Refresh
+- Error state with warning icon + retry button
+- Responsive layout (stacked on mobile, side-by-side on desktop)
+- Dark theme (slate-950 / gray-900 / slate-800) with Inter font
+- Toast notifications for signal updates and errors
 
 ---
 
@@ -361,12 +414,14 @@ npm run build --prefix client
 npm run server
 ```
 
+Netlify builds and deploys the client. The API is proxied to `https://frat-signals.onrender.com` (configured in `netlify.toml`).
+
 ---
 
 ## Configuration
 
 ### Risk Parameters (in code)
-- `riskPercent`: 1.0 (default, change in `trend.js` constructor → `new RiskEngine({ riskPercent })`)
+- `riskPercent`: 1.0 (default, change in `RiskEngine` constructor)
 - Min/max position sizes: 0.001 / 10.0 (in `RiskEngine` constructor)
 
 ### Confidence Weights
@@ -376,8 +431,8 @@ npm run server
 
 ## Code Conventions
 
-- **Exports**: Service modules export singleton instances (`module.exports = new ClassName()`) where stateless; constructors exported where stateful (`RiskEngine`, `SignalDatabase`, `KrakenExchange`).
-- **Error handling**: All exchange methods use try/catch and return null on failure. API endpoints return 400/500 JSON errors.
+- **Exports**: Stateless service modules export singleton instances (`module.exports = new ClassName()`). Stateful modules export classes (`RiskEngine`, `SignalDatabase`, `KrakenExchange`).
+- **Error handling**: Exchange methods use try/catch and return null on failure. API endpoints return 400/500 JSON errors.
 - **Null returns**: Indicator methods return `null` on insufficient data rather than throwing. `generateSignal` returns `null` when conditions aren't met.
-- **Rounding**: Prices, scores, and sizes are rounded to reasonable precision (2-4 decimal places).
-- **No logging library**: Uses `console.error` for exchange errors; console.log for server startup.
+- **Rounding**: Prices, scores, and sizes rounded to reasonable precision (2-4 decimal places).
+- **No logging library**: Uses `console.error` for exchange errors; `console.log` for server startup.
