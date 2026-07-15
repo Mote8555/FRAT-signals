@@ -16,14 +16,14 @@ class ConfidenceEngine {
     const components = [];
 
     if (inputs.regime) {
-      const regimeScore = this.scoreRegime(inputs.regime);
+      const regimeScore = this.scoreRegime(inputs.regime, inputs.hurst, inputs.regimeConfidence);
       components.push({ name: "regime", score: regimeScore, weight: weights.regime });
       totalScore += regimeScore * weights.regime;
       totalWeight += weights.regime;
     }
 
     if (inputs.trend) {
-      const trendScore = this.scoreTrend(inputs.trend);
+      const trendScore = this.scoreTrend(inputs.trend, inputs.trendStrength, inputs.trendSlope, inputs.momentum?.currentPrice || 0);
       components.push({ name: "trend", score: trendScore, weight: weights.trend });
       totalScore += trendScore * weights.trend;
       totalWeight += weights.trend;
@@ -52,19 +52,24 @@ class ConfidenceEngine {
     return { score: finalScore, grade, components };
   }
 
-  scoreRegime(regime) {
-    switch (regime) {
-      case "TRENDING": return 100;
-      case "MEAN_REVERTING": return 40;
-      case "RANDOM": return 10;
-      default: return 50;
-    }
+  scoreRegime(regime, hurst, regimeConfidence) {
+    if (regime !== "TRENDING") return 10;
+    // regimeConfidence ranges 60-100 for TRENDING
+    // Map 60→50, 80→75, 100→100
+    return Math.round(50 + (regimeConfidence - 60) * 1.25);
   }
 
-  scoreTrend(trend) {
-    if (trend === "BULLISH" || trend === "BEARISH") return 90;
-    if (trend === "NEUTRAL") return 50;
-    return 30;
+  scoreTrend(trend, strength, slope, currentPrice) {
+    if (trend === "NEUTRAL") return 30;
+    let score = 60; // base for passing the gate
+    // |strength| is 1 or 2 — bonus for strong (both slope + price position aligned)
+    score += Math.abs(strength) * 10;
+    // Bonus for strong relative slope (slope normalized by price)
+    const relSlope = currentPrice > 0 ? Math.abs(slope / currentPrice) : 0;
+    if (relSlope > 0.001) score += 15;
+    else if (relSlope > 0.0005) score += 10;
+    else if (relSlope > 0.0002) score += 5;
+    return Math.min(100, score);
   }
 
   scoreMomentum(macdBullish, t3Slope, currentPrice = 0) {

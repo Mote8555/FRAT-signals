@@ -6,6 +6,7 @@
     "server": "node server.js",
     "client": "npm run dev --prefix client",
     "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "backtest": "node backtesting/run.js",
     "install:all": "npm install && npm install --prefix client"
   },
   "dependencies": {

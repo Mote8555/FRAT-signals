@@ -39,7 +39,7 @@ async function analyzeTimeframe(symbol, timeframe, btcCandleData) {
   const candleData = await fetchCandleData(symbol, timeframe, limit);
   if (!candleData) return null;
 
-  const trend = TimeframeFilter.evaluateTrend(candleData.closes, 20);
+  const trend = TimeframeFilter.evaluateTrend(candleData.closes, 20).trend;
 
   const options = {};
   if (btcCandleData) options.btcPrices = btcCandleData.closes;
@@ -48,7 +48,7 @@ async function analyzeTimeframe(symbol, timeframe, btcCandleData) {
     const fourHourData = await fetchCandleData(symbol, "4h", 150);
     if (fourHourData) {
       const fourHourTrend = TimeframeFilter.evaluateTrend(fourHourData.closes, 60);
-      options.validatingTrend = fourHourTrend;
+      options.validatingTrend = fourHourTrend.trend;
     }
   }
 
@@ -102,7 +102,7 @@ app.get("/api/signal/:pair(*)", async (req, res) => {
     const fourHourData = await fetchCandleData(symbol, "4h", 150);
     if (fourHourData) {
       const fourHourTrend = TimeframeFilter.evaluateTrend(fourHourData.closes, 60);
-      options.validatingTrend = fourHourTrend;
+      options.validatingTrend = fourHourTrend.trend;
     }
 
     const signal = algo.generateSignal(symbol, candleData, options);

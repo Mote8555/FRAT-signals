@@ -164,10 +164,10 @@ class FRATAlgorithm {
     if (regime.regime !== "TRENDING") return null;
 
     const tfTrend = TimeframeFilter.evaluateTrend(closes, 20);
-    if (tfTrend === "NEUTRAL") return null;
+    if (tfTrend.trend === "NEUTRAL") return null;
 
     if (validatingTrend) {
-      if (tfTrend !== validatingTrend) return null;
+      if (tfTrend.trend !== validatingTrend) return null;
     }
 
     const btcResult = btcPrices
@@ -176,7 +176,11 @@ class FRATAlgorithm {
 
     const confidence = ConfidenceEngine.score({
       regime: regime.regime,
-      trend: tfTrend,
+      hurst: regime.hurst,
+      regimeConfidence: regime.confidence,
+      trend: tfTrend.trend,
+      trendStrength: tfTrend.strength,
+      trendSlope: tfTrend.slope,
       momentum: { macdBullish, t3Slope, currentPrice },
       btcFilter: btcResult,
     });

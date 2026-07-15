@@ -53,9 +53,9 @@ class TimeframeFilter {
     if (pricePosition > 0.01) strength += 1;
     if (pricePosition < -0.01) strength -= 1;
 
-    if (strength >= 1) return "BULLISH";
-    if (strength <= -1) return "BEARISH";
-    return "NEUTRAL";
+    if (strength >= 1) return { trend: "BULLISH", strength, slope };
+    if (strength <= -1) return { trend: "BEARISH", strength, slope: -slope };
+    return { trend: "NEUTRAL", strength: 0, slope: 0 };
   }
 
   filter(prices15m, prices1H, prices4H, pricesDaily) {
