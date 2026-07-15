@@ -74,7 +74,7 @@ export default function TimeframeCard({ tf, data }: TimeframeCardProps) {
             {signal!.type}
           </div>
         ) : (
-          <span className="text-gray-600 text-[13px]">No signal</span>
+          <span className="text-gray-300 text-[13px] font-medium" style={{ textShadow: "0 0 8px #0f1219, 0 0 16px #0f1219" }}>No signal</span>
         )}
       </div>
 
