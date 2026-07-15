@@ -35,7 +35,7 @@ class TimeframeFilter {
   }
 
   evaluateTrend(prices, period) {
-    if (prices.length < period + 5) return "NEUTRAL";
+    if (prices.length < period + 5) return { trend: "NEUTRAL", strength: 0, slope: 0 };
 
     const kama = this.calculateKAMA(prices, Math.min(period, 10));
     if (!kama || kama.length < 3) return "NEUTRAL";

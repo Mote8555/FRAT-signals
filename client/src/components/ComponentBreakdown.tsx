@@ -9,8 +9,6 @@ const componentColors: Record<string, string> = {
   trend: "#3b82f6",
   momentum: "#a855f7",
   btcFilter: "#f97316",
-  openInterest: "#ec4899",
-  funding: "#14b8a6",
 };
 
 export default function ComponentBreakdown({ components }: ComponentBreakdownProps) {

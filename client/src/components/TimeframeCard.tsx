@@ -1,7 +1,6 @@
 import type { TimeframeData } from "../api";
 import ConfidenceMeter from "./ConfidenceMeter";
 import ComponentBreakdown from "./ComponentBreakdown";
-import Sparkline from "./Sparkline";
 import useMediaQuery from "../useMediaQuery";
 
 interface TimeframeCardProps {
@@ -35,8 +34,6 @@ export default function TimeframeCard({ tf, data }: TimeframeCardProps) {
   const tpPx = signal?.takeProfit;
   const slPct = entryPx && slPx ? (((slPx - entryPx) / entryPx) * 100).toFixed(2) : null;
   const tpPct = entryPx && tpPx ? (((tpPx - entryPx) / entryPx) * 100).toFixed(2) : null;
-
-  const sparkColor = isBuy ? "#22c55e" : "#ef4444";
 
   return (
     <div
@@ -76,10 +73,6 @@ export default function TimeframeCard({ tf, data }: TimeframeCardProps) {
 
       {hasSignal && (
         <>
-          {data?.sparkline && (
-            <Sparkline data={data.sparkline} color={sparkColor} height={isMobile ? 30 : 40} />
-          )}
-
           <div className="flex gap-2">
             {entryPx != null && (
               <div className="flex-1 min-w-0">
@@ -118,13 +111,13 @@ export default function TimeframeCard({ tf, data }: TimeframeCardProps) {
             <ConfidenceMeter confidence={signal!.confidence} size={isMobile ? 60 : 70} />
           </div>
 
-          <ComponentBreakdown components={signal!.confidence?.components} />
+          <ComponentBreakdown components={signal!.confidence.components} />
         </>
       )}
 
       {regime && (
         <div className="text-[11px] text-gray-600 text-center border-t border-slate-800/60 pt-2">
-          H={regime.hurst} &middot; DFA={regime.dfa} &middot; conf={regime.confidence}%
+          H={regime.hurst} &middot; DFA={regime.dfa ?? "N/A"} &middot; conf={regime.confidence}%
         </div>
       )}
     </div>

@@ -29,7 +29,8 @@ function getConfluenceLabel(bullish: number, bearish: number, neutral: number) {
     if (pct >= 50) return { label: `BEARISH (${bearish}/${total})`, color: "text-red-600", pct };
     return { label: `WEAK BEARISH (${bearish}/${total})`, color: "text-orange-500", pct };
   }
-  return { label: `NEUTRAL (0/${total})`, color: "text-gray-500", pct: 0 };
+  const tied = Math.max(bullish, bearish);
+  return { label: `NEUTRAL (${tied}/${total})`, color: "text-gray-500", pct: 0 };
 }
 
 export default function FractalSignals({ data, loading, error, onRetry }: FractalSignalsProps) {
@@ -66,7 +67,7 @@ export default function FractalSignals({ data, loading, error, onRetry }: Fracta
     );
   }
 
-  const { timeframes, confluence, btcFilter, pair } = data;
+  const { timeframes, confluence, btcFilter, pair, dataSource } = data;
   const { bullishCount, bearishCount, neutralCount } = confluence;
   const con = getConfluenceLabel(bullishCount, bearishCount, neutralCount);
 
@@ -114,7 +115,7 @@ export default function FractalSignals({ data, loading, error, onRetry }: Fracta
       </div>
 
       <div className="text-[11px] text-gray-600 text-center mt-4">
-        Auto-refreshes every 60s &middot; Data: Kraken
+        Auto-refreshes every 60s &middot; Data: {dataSource || "Kraken"}
       </div>
     </div>
   );
