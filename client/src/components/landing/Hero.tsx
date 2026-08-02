@@ -62,9 +62,9 @@ export default function Hero() {
             <div className="relative">
               <div className="absolute -inset-6 rounded-full bg-blue-500/20 blur-3xl" />
               <img
-                src="/FRAT.webp"
+                src="/hero.png"
                 alt="FRAT Signals brand"
-                className="relative h-52 w-52 sm:h-64 sm:w-64 rounded-2xl border border-slate-800/60 shadow-2xl"
+                className="relative w-64 sm:w-80 lg:w-[360px] h-auto rounded-xl border border-slate-800/60 shadow-2xl"
               />
             </div>
           </div>
