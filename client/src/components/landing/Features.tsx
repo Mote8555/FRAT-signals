@@ -21,7 +21,7 @@ const FEATURES = [
   },
   {
     title: "Live Kraken Data",
-    body: "Spot prices stream directly from the Kraken exchange via CCXT, with the dashboard auto-refreshing every 60 seconds.",
+    body: "Spot prices stream directly from the Kraken exchange via CCXT, with the dashboard auto-refreshing every 3 minutes.",
   },
 ];
 

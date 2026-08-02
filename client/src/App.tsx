@@ -45,7 +45,7 @@ export default function App() {
 
   useEffect(() => {
     loadFractal(selected);
-    const interval = setInterval(() => loadFractal(selected), 60000);
+    const interval = setInterval(() => loadFractal(selected), 180000);
     return () => clearInterval(interval);
   }, [selected, loadFractal]);
 

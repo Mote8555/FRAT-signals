@@ -348,7 +348,7 @@ Vite + React 18 + TypeScript SPA with dark theme (3-layer depth: slate-950 backg
 
 | Component | File | Description |
 |-----------|------|-------------|
-| **App** | `src/App.tsx` | Root: pair selector, refresh button, 60s auto-refresh, toast notifications |
+| **App** | `src/App.tsx` | Root: pair selector, refresh button, 180s auto-refresh, toast notifications |
 | **PairSelector** | `src/components/PairSelector.tsx` | Searchable dropdown with keyboard nav, click-outside close |
 | **FractalSignals** | `src/components/FractalSignals.tsx` | 2×2 grid container header (pair, BTC badge, confluence label), confluence bar, footer |
 | **TimeframeCard** | `src/components/TimeframeCard.tsx` | Individual card: signal badge, sparkline, entry/SL/TP prices, confidence meter, breakdown, Hurst/DFA footer |
@@ -376,7 +376,7 @@ Vite + React 18 + TypeScript SPA with dark theme (3-layer depth: slate-950 backg
 - Score breakdown bar (weighted component visualization)
 - Confluence bar + label (e.g. "STRONG BULLISH (3/4)")
 - BTC market condition badge
-- 60-second auto-refresh
+- 3-minute auto-refresh
 - Animated loading spinner on manual Refresh
 - Error state with warning icon + retry button
 - Responsive layout (stacked on mobile, side-by-side on desktop)

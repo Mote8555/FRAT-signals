@@ -115,7 +115,7 @@ export default function FractalSignals({ data, loading, error, onRetry }: Fracta
       </div>
 
       <div className="text-[11px] text-gray-600 text-center mt-4">
-        Auto-refreshes every 60s &middot; Data: {dataSource || "Kraken"}
+        Auto-refreshes every 180s &middot; Data: {dataSource || "Kraken"}
       </div>
     </div>
   );

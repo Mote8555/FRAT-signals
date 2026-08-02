@@ -46,7 +46,7 @@ export default function Hero() {
               {[
                 { value: "4", label: "Timeframes" },
                 { value: "13", label: "Kraken pairs" },
-                { value: "60s", label: "Auto-refresh" },
+                { value: "180s", label: "Auto-refresh" },
               ].map((stat) => (
                 <div key={stat.label} className="text-center">
                   <div className="text-2xl font-extrabold text-gray-50">{stat.value}</div>
