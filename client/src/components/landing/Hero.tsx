@@ -60,9 +60,9 @@ export default function Hero() {
 
           <div className="flex-1 flex justify-center">
             <div className="relative">
-              <div className="absolute -inset-6 rounded-full bg-blue-500/20 blur-3xl" />
+              <div className="absolute -inset-6 rounded-3xl bg-blue-500/20 blur-3xl" />
               <img
-                src="/hero.png"
+                src="/hero.webp"
                 alt="FRAT Signals brand"
                 className="relative w-64 sm:w-80 lg:w-[360px] h-auto rounded-xl border border-slate-800/60 shadow-2xl"
               />
