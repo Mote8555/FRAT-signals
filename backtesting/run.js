@@ -9,7 +9,7 @@ function getArg(name, fallback) {
   return idx !== -1 && args[idx + 1] ? args[idx + 1] : fallback;
 }
 
-const symbol = getArg("symbol", "ETH/USDT");
+const symbol = getArg("symbol", "BCH/USDT");
 const timeframe = getArg("timeframe", "1d");
 const limit = parseInt(getArg("limit", "500"), 10);
 const balance = parseFloat(getArg("balance", "10000"));
