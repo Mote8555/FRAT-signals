@@ -30,9 +30,10 @@ export default function TimeframeCard({ tf, pair, data }: TimeframeCardProps) {
   const [chartData, setChartData] = useState<ChartData | null>(null);
   const [chartLoading, setChartLoading] = useState(false);
   const [chartError, setChartError] = useState<string | null>(null);
+  const [fetchKey, setFetchKey] = useState(0);
 
   useEffect(() => {
-    if (!showChart || chartData || chartLoading) return;
+    if (!showChart || chartData) return;
     let cancelled = false;
     setChartLoading(true);
     setChartError(null);
@@ -49,7 +50,13 @@ export default function TimeframeCard({ tf, pair, data }: TimeframeCardProps) {
     return () => {
       cancelled = true;
     };
-  }, [showChart, chartData, chartLoading, pair, tf]);
+  }, [showChart, chartData, pair, tf, fetchKey]);
+
+  useEffect(() => {
+    setChartData(null);
+    setChartError(null);
+    setChartLoading(false);
+  }, [pair]);
 
   const regimeColors = regimeColorMap[regime?.regime ?? ""] || regimeColorMap.UNKNOWN;
   const hasSignal = !!signal;
@@ -193,6 +200,7 @@ export default function TimeframeCard({ tf, pair, data }: TimeframeCardProps) {
                   setChartData(null);
                   setChartError(null);
                   setChartLoading(false);
+                  setFetchKey((k) => k + 1);
                 }}
                 className="px-3 py-1.5 rounded-md bg-red-500/20 text-red-400 text-xs font-semibold border border-red-500/30 cursor-pointer hover:bg-red-500/30 transition-colors"
               >
