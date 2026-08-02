@@ -76,3 +76,32 @@ export async function fetchFractal(pair: string): Promise<FractalData> {
   }
   return res.json();
 }
+
+export interface ChartIndicators {
+  kama: (number | null)[];
+  t3: (number | null)[];
+  macd: (number | null)[];
+  macdSignal: (number | null)[];
+  atr: (number | null)[];
+}
+
+export interface ChartData {
+  pair: string;
+  timeframe: string;
+  timestamps: number[];
+  opens: number[];
+  highs: number[];
+  lows: number[];
+  closes: number[];
+  volumes: number[];
+  indicators: ChartIndicators;
+}
+
+export async function fetchChart(pair: string, timeframe: string): Promise<ChartData> {
+  const res = await fetch(`${BASE}/chart/${encodeURIComponent(pair)}/${timeframe}`);
+  if (!res.ok) {
+    if (res.status === 503) throw new Error("Market data unavailable");
+    throw new Error("Failed to fetch chart data");
+  }
+  return res.json();
+}

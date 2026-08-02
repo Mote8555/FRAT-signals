@@ -110,7 +110,7 @@ export default function FractalSignals({ data, loading, error, onRetry }: Fracta
 
       <div className={`grid ${isMobile ? "grid-cols-1 gap-2.5" : "grid-cols-2 gap-3"}`}>
         {TF_ORDER.map((tf) => (
-          <TimeframeCard key={tf} tf={tf} data={timeframes?.[tf] || null} />
+          <TimeframeCard key={tf} tf={tf} pair={pair} data={timeframes?.[tf] || null} />
         ))}
       </div>
 

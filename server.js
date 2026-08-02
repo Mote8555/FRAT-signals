@@ -20,12 +20,35 @@ const TF_MIN_CANDLES = { "15m": 200, "1h": 200, "4h": 150, "1d": 100 };
 
 function candleDataFromOHLCV(ohlcv) {
   return {
+    timestamps: ohlcv.map(c => c.timestamp),
     opens: ohlcv.map(c => c.open),
     highs: ohlcv.map(c => c.high),
     lows: ohlcv.map(c => c.low),
     closes: ohlcv.map(c => c.close),
     volumes: ohlcv.map(c => c.volume),
   };
+}
+
+function padStart(length, series) {
+  if (!series) return null;
+  const padding = new Array(Math.max(0, length - series.length)).fill(null);
+  return [...padding, ...series];
+}
+
+function getIndicatorSeries(candleData) {
+  const { closes, volumes, highs, lows } = candleData;
+  const n = closes.length;
+
+  const kama = padStart(n, algo.calculateKAMA(closes));
+  const t3 = padStart(n, algo.calculateT3(closes));
+
+  const vwmacd = algo.calculateVWMACD(closes, volumes);
+  const macd = vwmacd ? padStart(n, vwmacd.macdLine) : null;
+  const macdSignal = vwmacd ? padStart(n, vwmacd.signalLine) : null;
+
+  const atr = padStart(n, algo.calculateATR(highs, lows, closes));
+
+  return { kama, t3, macd, macdSignal, atr };
 }
 
 async function fetchCandleData(symbol, timeframe = "1h", limit = 300) {
@@ -164,6 +187,34 @@ app.get("/api/fractal/:pair(*)", async (req, res) => {
       timeframes,
       confluence: { bullishCount, bearishCount, neutralCount },
       btcFilter,
+      dataSource: "Kraken",
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/chart/:pair(*)/:timeframe", async (req, res) => {
+  try {
+    const symbol = decodeURIComponent(req.params.pair).toUpperCase();
+    const timeframe = req.params.timeframe.toLowerCase();
+    if (!symbol.includes("/")) return res.status(400).json({ error: "Invalid symbol. Use format BTC/USDT" });
+    if (!TIMEFRAMES.includes(timeframe)) return res.status(400).json({ error: "Invalid timeframe. Use 15m, 1h, 4h or 1d" });
+
+    const candleData = await fetchCandleData(symbol, timeframe);
+    if (!candleData) return res.status(503).json({ error: "Failed to fetch market data" });
+
+    res.json({
+      pair: symbol,
+      timeframe,
+      timestamps: candleData.timestamps,
+      opens: candleData.opens,
+      highs: candleData.highs,
+      lows: candleData.lows,
+      closes: candleData.closes,
+      volumes: candleData.volumes,
+      indicators: getIndicatorSeries(candleData),
       dataSource: "Kraken",
       timestamp: new Date().toISOString(),
     });

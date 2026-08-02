@@ -1,10 +1,15 @@
-import type { TimeframeData } from "../api";
+import { lazy, Suspense, useEffect, useState } from "react";
+import type { ChartData, TimeframeData } from "../api";
+import { fetchChart } from "../api";
 import ConfidenceMeter from "./ConfidenceMeter";
 import ComponentBreakdown from "./ComponentBreakdown";
 import useMediaQuery from "../useMediaQuery";
 
+const CandleChart = lazy(() => import("./CandleChart"));
+
 interface TimeframeCardProps {
   tf: string;
+  pair: string;
   data: TimeframeData | null;
 }
 
@@ -15,11 +20,36 @@ const regimeColorMap: Record<string, { text: string; bg: string }> = {
   UNKNOWN: { text: "text-gray-500", bg: "bg-gray-500/10" },
 };
 
-export default function TimeframeCard({ tf, data }: TimeframeCardProps) {
+export default function TimeframeCard({ tf, pair, data }: TimeframeCardProps) {
   const isMobile = useMediaQuery("(max-width: 640px)");
   const noData = !data;
   const signal = data?.signal;
   const regime = data?.regime;
+
+  const [showChart, setShowChart] = useState(false);
+  const [chartData, setChartData] = useState<ChartData | null>(null);
+  const [chartLoading, setChartLoading] = useState(false);
+  const [chartError, setChartError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!showChart || chartData || chartLoading) return;
+    let cancelled = false;
+    setChartLoading(true);
+    setChartError(null);
+    fetchChart(pair, tf)
+      .then((result) => {
+        if (!cancelled) setChartData(result);
+      })
+      .catch((err) => {
+        if (!cancelled) setChartError(err instanceof Error ? err.message : "Failed to load chart");
+      })
+      .finally(() => {
+        if (!cancelled) setChartLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [showChart, chartData, chartLoading, pair, tf]);
 
   const regimeColors = regimeColorMap[regime?.regime ?? ""] || regimeColorMap.UNKNOWN;
   const hasSignal = !!signal;
@@ -125,6 +155,62 @@ export default function TimeframeCard({ tf, data }: TimeframeCardProps) {
       {regime && (
         <div className="text-[11px] text-gray-600 text-center border-t border-slate-800/60 pt-2">
           H={regime.hurst} &middot; DFA={regime.dfa ?? "N/A"} &middot; conf={regime.confidence}%
+        </div>
+      )}
+
+      <button
+        onClick={() => setShowChart((prev) => !prev)}
+        className="mt-1 w-full flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800/60 text-gray-300 text-xs font-semibold cursor-pointer hover:bg-slate-800 hover:text-gray-100 active:bg-slate-700 transition-colors"
+      >
+        <svg
+          className="w-3.5 h-3.5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
+          {showChart ? (
+            <polyline points="6 9 12 15 18 9" />
+          ) : (
+            <polyline points="6 15 12 9 18 15" />
+          )}
+        </svg>
+        {showChart ? "Hide Chart" : "Show Chart"}
+      </button>
+
+      {showChart && (
+        <div className="border-t border-slate-800/60 pt-2">
+          {chartLoading && (
+            <div className="h-[214px] animate-pulse rounded-lg bg-slate-800/40 flex items-center justify-center text-xs text-gray-500">
+              Loading chart...
+            </div>
+          )}
+          {chartError && !chartLoading && (
+            <div className="rounded-lg bg-red-500/10 border border-red-500/30 p-3 text-center">
+              <div className="text-xs text-red-400 mb-2">{chartError}</div>
+              <button
+                onClick={() => {
+                  setChartData(null);
+                  setChartError(null);
+                  setChartLoading(false);
+                }}
+                className="px-3 py-1.5 rounded-md bg-red-500/20 text-red-400 text-xs font-semibold border border-red-500/30 cursor-pointer hover:bg-red-500/30 transition-colors"
+              >
+                Retry
+              </button>
+            </div>
+          )}
+          {chartData && !chartLoading && (
+            <Suspense
+              fallback={
+                <div className="h-[214px] animate-pulse rounded-lg bg-slate-800/40 flex items-center justify-center text-xs text-gray-500">
+                  Loading chart...
+                </div>
+              }
+            >
+              <CandleChart data={chartData} height={isMobile ? 120 : 150} />
+            </Suspense>
+          )}
         </div>
       )}
     </div>
