@@ -1,73 +1,63 @@
 import { Link } from "react-router-dom";
+import { Check } from "lucide-react";
+import DashboardMockup from "./DashboardMockup";
+
+const HIGHLIGHTS = [
+  "Regime Detection",
+  "Multi-Timeframe Analysis",
+  "Confidence Grading",
+  "BTC Market Filter",
+  "Adaptive Risk",
+];
 
 export default function Hero() {
   return (
-    <section className="relative overflow-hidden">
-      <div
-        className="absolute inset-0 opacity-[0.06] pointer-events-none"
-        style={{
-          backgroundImage: "url(/FRAT.webp)",
-          backgroundSize: "480px",
-          backgroundPosition: "center",
-          backgroundRepeat: "repeat",
-        }}
-      />
-      <div className="max-w-6xl mx-auto px-5 py-20 sm:py-28 relative">
-        <div className="flex flex-col lg:flex-row items-center gap-12">
-          <div className="flex-1 text-center lg:text-left">
-            <span className="inline-block text-[11px] font-semibold px-3 py-1 rounded-full bg-slate-800 text-blue-400 border border-slate-700 mb-5">
-              Fractal Regime-Adaptive Trading
-            </span>
-            <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-gray-50 leading-tight">
-              Trade the trend,
-              <br />
-              <span className="text-blue-500">not the noise.</span>
-            </h1>
-            <p className="mt-5 text-gray-400 text-lg max-w-xl mx-auto lg:mx-0">
-              FRAT Signals analyzes crypto markets across four timeframes with Hurst/DFA regime
-              detection, KAMA/T3 trend confirmation, and VW-MACD momentum — scoring every signal
-              with a weighted confidence grade.
-            </p>
-            <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
-              <Link
-                to="/app"
-                className="px-6 py-3 rounded-lg bg-blue-500 text-white font-semibold text-base border-0 cursor-pointer hover:bg-blue-600 active:bg-blue-700 transition-colors text-center"
-              >
-                Launch Dashboard
-              </Link>
-              <a
-                href="#methodology"
-                className="px-6 py-3 rounded-lg border border-slate-700 bg-gray-900 text-gray-200 font-semibold text-base cursor-pointer hover:bg-slate-800 active:bg-slate-700 transition-colors text-center"
-              >
-                How it works
-              </a>
-            </div>
-            <div className="mt-10 grid grid-cols-3 gap-4 max-w-md mx-auto lg:mx-0">
-              {[
-                { value: "4", label: "Timeframes" },
-                { value: "13", label: "Kraken pairs" },
-                { value: "180s", label: "Auto-refresh" },
-              ].map((stat) => (
-                <div key={stat.label} className="text-center">
-                  <div className="text-2xl font-extrabold text-gray-50">{stat.value}</div>
-                  <div className="text-[11px] text-gray-500 uppercase tracking-wider font-semibold mt-0.5">
-                    {stat.label}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+    <section className="hero-glow bg-grid relative overflow-hidden">
+      <div className="max-w-7xl mx-auto px-5 py-16 sm:py-24 text-center">
+        <span className="inline-block text-[11px] font-semibold px-3 py-1 rounded-full bg-slate-800 text-blue-400 border border-slate-700">
+          Fractal Regime-Adaptive Trading
+        </span>
 
-          <div className="flex-1 flex justify-center">
-            <div className="relative">
-              <div className="absolute -inset-6 rounded-3xl bg-blue-500/20 blur-3xl" />
-              <img
-                src="/hero.webp"
-                alt="FRAT Signals brand"
-                className="relative w-64 sm:w-80 lg:w-[360px] h-auto rounded-xl border border-slate-800/60 shadow-2xl"
-              />
-            </div>
-          </div>
+        <h1 className="mt-6 text-4xl sm:text-6xl font-extrabold tracking-tight text-gray-50 leading-tight">
+          Trade the trend.
+          <br />
+          <span className="text-blue-500">Ignore the chaos.</span>
+        </h1>
+
+        <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-gray-400">
+          FRAT doesn&apos;t signal every market. It first measures whether a market is statistically
+          worth trading — then generates high-conviction, confidence-graded signals you can actually
+          act on.
+        </p>
+
+        <ul className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+          {HIGHLIGHTS.map((item) => (
+            <li key={item} className="flex items-center gap-2 text-sm font-medium text-gray-300">
+              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-green-500/10 text-green-500">
+                <Check className="h-3 w-3" aria-hidden="true" />
+              </span>
+              {item}
+            </li>
+          ))}
+        </ul>
+
+        <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <Link
+            to="/app"
+            className="px-7 py-3.5 rounded-lg bg-blue-500 text-white font-semibold text-base border-0 cursor-pointer hover:bg-blue-600 active:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 transition-colors"
+          >
+            Launch Dashboard
+          </Link>
+          <a
+            href="#pipeline"
+            className="px-7 py-3.5 rounded-lg border border-slate-700 bg-gray-900 text-gray-200 font-semibold text-base cursor-pointer hover:bg-slate-800 active:bg-slate-700 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 transition-colors"
+          >
+            View Methodology
+          </a>
+        </div>
+
+        <div className="mx-auto mt-16 max-w-3xl">
+          <DashboardMockup compact />
         </div>
       </div>
     </section>

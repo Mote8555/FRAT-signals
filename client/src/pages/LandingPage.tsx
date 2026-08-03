@@ -1,8 +1,14 @@
 import Navbar from "../components/landing/Navbar";
 import Hero from "../components/landing/Hero";
+import TrustMetrics from "../components/landing/TrustMetrics";
+import Problem from "../components/landing/Problem";
+import Comparison from "../components/landing/Comparison";
+import Pipeline from "../components/landing/Pipeline";
+import DashboardPreview from "../components/landing/DashboardPreview";
 import Features from "../components/landing/Features";
-import Methodology from "../components/landing/Methodology";
-import Pairs from "../components/landing/Pairs";
+import Markets from "../components/landing/Markets";
+import FAQ from "../components/landing/FAQ";
+import CTA from "../components/landing/CTA";
 import Footer from "../components/landing/Footer";
 
 export default function LandingPage() {
@@ -11,9 +17,15 @@ export default function LandingPage() {
       <Navbar />
       <main>
         <Hero />
+        <TrustMetrics />
+        <Problem />
+        <Comparison />
+        <Pipeline />
+        <DashboardPreview />
         <Features />
-        <Methodology />
-        <Pairs />
+        <Markets />
+        <FAQ />
+        <CTA />
       </main>
       <Footer />
     </div>

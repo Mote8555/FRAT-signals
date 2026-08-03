@@ -1,49 +1,132 @@
-const FEATURES = [
+import type { ReactNode } from "react";
+import { Award, Brain, Gauge, Layers, ShieldCheck, TrendingUp } from "lucide-react";
+
+interface Feature {
+  icon: typeof Brain;
+  title: string;
+  body: string;
+  visual: ReactNode;
+}
+
+const FEATURES: Feature[] = [
   {
-    title: "Multi-Timeframe Confluence",
-    body: "Signals are generated independently across 15m, 1h, 4h and 1d, then combined into a single confluence score so you see the full fractal picture.",
+    icon: Brain,
+    title: "Regime Detection",
+    body: "Classifies each timeframe as TRENDING, RANDOM or MEAN_REVERTING — and only trades the trending ones.",
+    visual: (
+      <div className="flex flex-wrap gap-1.5">
+        <span className="rounded-full border border-green-500/40 bg-green-500/10 px-2.5 py-0.5 text-[10px] font-semibold text-green-500">
+          TRENDING
+        </span>
+        <span className="rounded-full border border-slate-700 bg-slate-800/60 px-2.5 py-0.5 text-[10px] font-semibold text-gray-500">
+          RANDOM
+        </span>
+        <span className="rounded-full border border-slate-700 bg-slate-800/60 px-2.5 py-0.5 text-[10px] font-semibold text-gray-500">
+          MEAN_REVERTING
+        </span>
+      </div>
+    ),
   },
   {
-    title: "Hurst / DFA Regime Engine",
-    body: "Markets are classified as TRENDING, RANDOM or MEAN_REVERTING using rescaled-range and detrended fluctuation analysis. Trades only fire in trending conditions.",
+    icon: TrendingUp,
+    title: "Trend Filter",
+    body: "KAMA and T3 confirm direction on the timeframe and against its 4h validating trend.",
+    visual: (
+      <svg viewBox="0 0 120 36" className="h-9 w-full text-green-500" aria-hidden="true">
+        <polyline
+          points="0,30 20,26 40,27 60,18 80,12 120,4"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+      </svg>
+    ),
   },
   {
-    title: "Confidence Scoring",
-    body: "Every signal carries a weighted confidence score and letter grade (A+ through C) built from regime, trend, momentum and BTC filter components.",
+    icon: Gauge,
+    title: "Momentum",
+    body: "Volume-weighted MACD measures momentum strength and direction — after the trend is confirmed.",
+    visual: (
+      <div className="flex h-2 w-full gap-1">
+        <div className="flex-1 rounded bg-red-500/60" />
+        <div className="flex-1 rounded bg-slate-700" />
+        <div className="flex-1 rounded bg-slate-700" />
+        <div className="flex-1 rounded bg-green-500/60" />
+        <div className="flex-1 rounded bg-green-500" />
+      </div>
+    ),
   },
   {
-    title: "Adaptive TP / SL",
-    body: "Take-profit and stop-loss targets scale with regime strength and ATR volatility instead of using fixed multipliers.",
-  },
-  {
+    icon: ShieldCheck,
     title: "BTC Market Filter",
-    body: "Bitcoin trend and volatility are factored into the scoring pipeline, giving altcoin signals a market-wide reality check.",
+    body: "Bitcoin's trend and volatility give every altcoin signal a market-wide reality check.",
+    visual: (
+      <div className="flex items-center gap-1.5">
+        <span className="text-[10px] font-semibold text-gray-500">BTC</span>
+        <span className="rounded-full border border-green-500/40 bg-green-500/10 px-2.5 py-0.5 text-[10px] font-semibold text-green-500">
+          BULLISH
+        </span>
+      </div>
+    ),
   },
   {
-    title: "Live Kraken Data",
-    body: "Spot prices stream directly from the Kraken exchange via CCXT, with the dashboard auto-refreshing every 3 minutes.",
+    icon: Layers,
+    title: "Adaptive Risk",
+    body: "TP and SL scale with regime strength and ATR volatility — no fixed multipliers.",
+    visual: (
+      <div className="flex gap-1.5">
+        <span className="rounded-md border border-red-500/40 bg-red-500/10 px-2.5 py-1 text-[10px] font-semibold text-red-500">
+          SL · 2×ATR
+        </span>
+        <span className="rounded-md border border-green-500/40 bg-green-500/10 px-2.5 py-1 text-[10px] font-semibold text-green-500">
+          TP · 5×ATR
+        </span>
+      </div>
+    ),
+  },
+  {
+    icon: Award,
+    title: "Confidence",
+    body: "Four weighted components grade every signal A+ through C — rejecting weak opportunities before they become losing trades.",
+    visual: (
+      <div className="flex h-2 w-full gap-0.5">
+        <div className="flex-[30] rounded bg-green-500" />
+        <div className="flex-[25] rounded bg-blue-500" />
+        <div className="flex-[25] rounded bg-purple-500" />
+        <div className="flex-[20] rounded bg-orange-500" />
+      </div>
+    ),
   },
 ];
 
 export default function Features() {
   return (
     <section id="features" className="border-t border-slate-800/60">
-      <div className="max-w-6xl mx-auto px-5 py-16 sm:py-20">
-        <h2 className="text-3xl font-extrabold tracking-tight text-gray-50 text-center">
+      <div className="max-w-7xl mx-auto px-5 py-16 sm:py-20">
+        <h2 className="text-center text-3xl font-extrabold tracking-tight text-gray-50 sm:text-4xl">
           Built for trending markets
         </h2>
-        <p className="mt-3 text-gray-400 text-center max-w-2xl mx-auto">
-          A full signal pipeline — regime detection, trend filtering, momentum, and scoring — in
+        <p className="mx-auto mt-3 max-w-2xl text-center text-gray-400">
+          A complete signal pipeline — regime detection, trend filtering, momentum, and scoring — in
           one dashboard.
         </p>
-        <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {FEATURES.map((feature) => (
             <div
               key={feature.title}
-              className="bg-gray-900 rounded-xl border border-slate-800/60 p-6 hover:border-slate-700 transition-colors"
+              className="flex flex-col gap-4 rounded-xl border border-slate-800/60 bg-gray-900 p-6 transition-colors hover:border-slate-700"
             >
-              <h3 className="font-bold text-gray-50 mb-2">{feature.title}</h3>
-              <p className="text-sm text-gray-400 leading-relaxed">{feature.body}</p>
+              <div className="flex items-center gap-3">
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-700 bg-slate-800 text-blue-400">
+                  <feature.icon className="h-5 w-5" aria-hidden="true" />
+                </span>
+                <h3 className="text-xl font-bold text-gray-50">{feature.title}</h3>
+              </div>
+              <p className="text-sm leading-relaxed text-gray-400">{feature.body}</p>
+              <div className="mt-auto rounded-lg border border-slate-800/60 bg-slate-950/50 p-3">
+                {feature.visual}
+              </div>
             </div>
           ))}
         </div>
