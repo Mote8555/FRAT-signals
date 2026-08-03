@@ -16,7 +16,7 @@ export default function CTA() {
             to="/app"
             className="inline-block px-7 py-3.5 rounded-lg bg-blue-500 text-white font-semibold text-base border-0 cursor-pointer hover:bg-blue-600 active:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 transition-colors"
           >
-            Launch Dashboard
+            View Signals
           </Link>
         </div>
       </div>

@@ -31,7 +31,7 @@ export default function Navbar() {
           to="/app"
           className="px-4 py-2 rounded-lg bg-blue-500 text-white font-semibold text-sm border-0 cursor-pointer hover:bg-blue-600 active:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 transition-colors"
         >
-          Launch Dashboard
+          View Signals
         </Link>
       </div>
     </header>
