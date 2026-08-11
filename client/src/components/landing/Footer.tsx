@@ -4,19 +4,16 @@ const COLUMNS = [
   {
     title: "Product",
     links: [
-      { label: "Dashboard", to: "/app" },
+      { label: "View signals", to: "/app" },
       { label: "Methodology", href: "#pipeline" },
       { label: "Markets", href: "#markets" },
-      { label: "Roadmap", href: "https://github.com/Mote8555/FRAT-signals/blob/main/todo.md" },
       { label: "Documentation", href: "https://github.com/Mote8555/FRAT-signals" },
     ],
   },
   {
-    title: "Resources",
+    title: "Tools",
     links: [
-      { label: "FAQ", href: "#faq" },
-      { label: "How it works", href: "#pipeline" },
-      { label: "Program notes", href: "https://github.com/Mote8555/FRAT-signals/blob/main/program.md" },
+      { label: "FRAS", href: "https://fras-frontend.onrender.com/" },
     ],
   },
   {
@@ -48,7 +45,7 @@ export default function Footer() {
                 Powered by Kraken
               </span>
               <span className="rounded-full border border-slate-700 bg-slate-800/60 px-3 py-1 text-[11px] font-semibold text-gray-300">
-                Powered by CCXT
+                Provided by FRAT Signals
               </span>
             </div>
           </div>
@@ -85,11 +82,11 @@ export default function Footer() {
 
         <div className="mt-12 flex flex-col items-center gap-3 border-t border-slate-800/60 pt-6 text-center">
           <p className="text-[11px] text-gray-600 max-w-md">
-            Educational tool only. Not financial advice. Trading cryptocurrencies involves substantial
+          Not financial advice. Trading cryptocurrencies involves substantial
             risk of loss.
           </p>
           <p className="text-[11px] text-gray-600">
-            Data: Kraken &middot; FRAT Signals &copy; {new Date().getFullYear()}
+            Data provided by Kraken &middot; FRAT Signals &copy; {new Date().getFullYear()}
           </p>
         </div>
       </div>
