@@ -12,7 +12,7 @@ interface FractalSignalsProps {
 
 const TF_ORDER = ["15m", "1h", "4h", "1d"];
 
-function getConfluenceLabel(bullish: number, bearish: number, neutral: number) {
+export function getConfluenceLabel(bullish: number, bearish: number, neutral: number) {
   const total = bullish + bearish + neutral;
   if (total === 0) return { label: "No data", color: "text-gray-500", pct: 0 };
   if (bullish > bearish && bullish > 0) {
