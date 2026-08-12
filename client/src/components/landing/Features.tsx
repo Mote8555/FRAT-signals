@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
-import { Award, Brain, Gauge, Layers, ShieldCheck, TrendingUp } from "lucide-react";
+import { Award, Activity, ChartNoAxesCombined , Layers, TrendingUp, Bitcoin } from "lucide-react";
 
 interface Feature {
-  icon: typeof Brain;
+  icon: typeof Activity;
   title: string;
   body: string;
   visual: ReactNode;
@@ -10,7 +10,7 @@ interface Feature {
 
 const FEATURES: Feature[] = [
   {
-    icon: Brain,
+    icon: Activity,
     title: "Regime Detection",
     body: "Classifies each timeframe as TRENDING, RANDOM or MEAN_REVERTING — and only trades the trending ones.",
     visual: (
@@ -44,7 +44,7 @@ const FEATURES: Feature[] = [
     ),
   },
   {
-    icon: Gauge,
+    icon:ChartNoAxesCombined,
     title: "Momentum",
     body: "Volume-weighted MACD measures momentum strength and direction — after the trend is confirmed.",
     visual: (
@@ -58,7 +58,7 @@ const FEATURES: Feature[] = [
     ),
   },
   {
-    icon: ShieldCheck,
+    icon: Bitcoin,
     title: "BTC Market Filter",
     body: "Bitcoin's trend and volatility give every altcoin signal a market-wide reality check.",
     visual: (
