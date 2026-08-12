@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
 import { Check } from "lucide-react";
-import DashboardMockup from "./DashboardMockup";
 
 const HIGHLIGHTS = [
   "Regime Detection",
@@ -52,13 +51,11 @@ export default function Hero() {
             href="#pipeline"
             className="px-7 py-3.5 rounded-lg border border-slate-700 bg-gray-900 text-gray-200 font-semibold text-base cursor-pointer hover:bg-slate-800 active:bg-slate-700 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 transition-colors"
           >
-            View Methodology
+            How signals are generated
           </a>
         </div>
 
-        <div className="mx-auto mt-16 max-w-3xl">
-          <DashboardMockup compact />
-        </div>
+       
       </div>
     </section>
   );

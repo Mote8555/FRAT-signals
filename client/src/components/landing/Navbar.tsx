@@ -1,11 +1,8 @@
 import { Link } from "react-router-dom";
 
 const LINKS = [
-  { href: "#features", label: "Features" },
-  { href: "#pipeline", label: "Methodology" },
-  { href: "#dashboard", label: "Dashboard" },
-  { href: "#markets", label: "Markets" },
-  { href: "#faq", label: "FAQ" },
+    { href: "#pipeline", label: "Methodology" },
+    { href: "#features", label: "Features" },
 ];
 
 export default function Navbar() {
