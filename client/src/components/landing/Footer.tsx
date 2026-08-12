@@ -13,7 +13,7 @@ const COLUMNS = [
   {
     title: "Tools",
     links: [
-      { label: "FRAS", href: "https://fras-frontend.onrender.com/" },
+      { label: "FRAS-Fractal Regime-Adaptive System", href: "https://fras-frontend.onrender.com/" },
     ],
   },
   {
