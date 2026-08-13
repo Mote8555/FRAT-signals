@@ -39,34 +39,14 @@ FRAT Signals is a **cryptocurrency trading signal dashboard** that analyzes digi
 ### System Requirements
 
 - Modern web browser (Chrome, Firefox, Safari, Edge)
-- Internet connection to connect to the Kraken exchange
+- Internet connection 
 - No additional software installation required
 
-### Running the Application
 
-The application requires both a backend server and a frontend dashboard:
-
-#### For Developers/Local Setup
-
-1. **Install dependencies**:
-   ```bash
-   npm run install:all
-   ```
-
-2. **Start the development environment**:
-   ```bash
-   npm run dev
-   ```
-
-   This starts:
-   - Backend server on `http://localhost:3001`
-   - Frontend dashboard on `http://localhost:5173`
-
-3. **Open your browser** and navigate to the frontend URL shown in the terminal
 
 #### For Users
 
-Simply navigate to the deployed FRAT Signals dashboard URL provided by your administrator.
+Simply navigate to the deployed FRAT Signals dashboard URL fratsignal.netlify.app
 
 ---
 
