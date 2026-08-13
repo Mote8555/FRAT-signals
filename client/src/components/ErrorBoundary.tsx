@@ -34,7 +34,7 @@ export default class ErrorBoundary extends Component<Props, State> {
               onClick={this.handleRetry}
               className="px-5 py-2.5 rounded-lg bg-blue-500 text-white font-semibold text-sm border-0 cursor-pointer"
             >
-              Try again
+              Please Refresh
             </button>
           </div>
         </div>

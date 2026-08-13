@@ -98,7 +98,7 @@ app.get("/api/regime/:pair(*)", async (req, res) => {
     if (!symbol.includes("/")) return res.status(400).json({ error: "Invalid symbol. Use format BTC/USDT" });
 
     const candleData = await fetchCandleData(symbol, "1h", 300);
-    if (!candleData) return res.status(503).json({ error: "Failed to fetch market data" });
+    if (!candleData) return res.status(503).json({ error: "Please refresh the page" });
 
     const regime = RegimeEngine.detectRegime(candleData.closes);
     res.json({ pair: symbol, ...regime });

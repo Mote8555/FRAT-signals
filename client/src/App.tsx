@@ -92,6 +92,17 @@ export default function App() {
         </div>
 
         <FractalSignals data={data} loading={loading} error={error} onRetry={() => loadFractal(selected)} />
+
+        <div className="text-center mt-6">
+          <a
+            href="https://curiousminds.netlify.app/posts/frat-signals-guide/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[12px] text-blue-400 hover:text-blue-300 underline underline-offset-2"
+          >
+            How to use the app
+          </a>
+        </div>
       </div>
     </div>
   );

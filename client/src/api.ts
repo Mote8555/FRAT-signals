@@ -72,7 +72,7 @@ export async function fetchFractal(pair: string): Promise<FractalData> {
   const res = await fetch(`${BASE}/fractal/${encodeURIComponent(pair)}`);
   if (!res.ok) {
     if (res.status === 503) throw new Error("Market data unavailable");
-    throw new Error("Failed to fetch fractal signals");
+    throw new Error("Please refresh the page");
   }
   return res.json();
 }
