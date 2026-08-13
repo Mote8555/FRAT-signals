@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Check } from "lucide-react";
+import ShapeGrid from "../ShapeGrid";
 
 const HIGHLIGHTS = [
   "Regime Detection",
@@ -11,8 +12,20 @@ const HIGHLIGHTS = [
 
 export default function Hero() {
   return (
-    <section className="hero-glow bg-grid relative overflow-hidden">
-      <div className="max-w-7xl mx-auto px-5 py-16 sm:py-24 text-center">
+    <section className="hero-glow relative overflow-hidden">
+      <div className="absolute inset-0 z-0" aria-hidden="true">
+        <ShapeGrid
+          direction="diagonal"
+          speed={0.3}
+          borderColor="rgba(148,163,184,0.1)"
+          squareSize={44}
+          shape="hexagon"
+          hoverTrailAmount={3}
+          hoverFillColor="rgba(59,130,246,0.12)"
+          vignetteColor="#020617"
+        />
+      </div>
+      <div className="relative z-10 max-w-7xl mx-auto px-5 py-16 sm:py-24 text-center">
         <span className="inline-block text-[11px] font-semibold px-3 py-1 rounded-full bg-slate-800 text-blue-400 border border-slate-700">
           Fractal Regime-Adaptive Trading
         </span>
