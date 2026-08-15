@@ -14,23 +14,23 @@ const TF_ORDER = ["15m", "1h", "4h", "1d"];
 
 export function getConfluenceLabel(bullish: number, bearish: number, neutral: number) {
   const total = bullish + bearish + neutral;
-  if (total === 0) return { label: "No data", color: "text-gray-500", pct: 0 };
+  if (total === 0) return { label: "No data", color: "text-gray-400", pct: 0 };
   if (bullish > bearish && bullish > 0) {
     const pct = Math.round((bullish / (bullish + bearish + neutral)) * 100);
     if (pct >= 75)
       return { label: `STRONG BULLISH (${bullish}/${total})`, color: "text-green-500", pct };
-    if (pct >= 50) return { label: `BULLISH (${bullish}/${total})`, color: "text-green-600", pct };
+    if (pct >= 50) return { label: `BULLISH (${bullish}/${total})`, color: "text-green-500", pct };
     return { label: `WEAK BULLISH (${bullish}/${total})`, color: "text-yellow-500", pct };
   }
   if (bearish > bullish && bearish > 0) {
     const pct = Math.round((bearish / (bullish + bearish + neutral)) * 100);
     if (pct >= 75)
       return { label: `STRONG BEARISH (${bearish}/${total})`, color: "text-red-500", pct };
-    if (pct >= 50) return { label: `BEARISH (${bearish}/${total})`, color: "text-red-600", pct };
+    if (pct >= 50) return { label: `BEARISH (${bearish}/${total})`, color: "text-red-400", pct };
     return { label: `WEAK BEARISH (${bearish}/${total})`, color: "text-orange-500", pct };
   }
   const tied = Math.max(bullish, bearish);
-  return { label: `NEUTRAL (${tied}/${total})`, color: "text-gray-500", pct: 0 };
+  return { label: `NEUTRAL (${tied}/${total})`, color: "text-gray-400", pct: 0 };
 }
 
 export default function FractalSignals({ data, loading, error, onRetry }: FractalSignalsProps) {
@@ -61,7 +61,7 @@ export default function FractalSignals({ data, loading, error, onRetry }: Fracta
 
   if (!data) {
     return (
-      <div className="text-center text-gray-500 p-10 bg-gray-900 rounded-xl border border-slate-800/60">
+      <div className="text-center text-gray-400 p-10 bg-gray-900 rounded-xl border border-slate-800/60">
         Select a pair to view fractal signals
       </div>
     );
@@ -87,7 +87,7 @@ export default function FractalSignals({ data, loading, error, onRetry }: Fracta
                   ? "text-green-500"
                   : btcFilter.btcTrend === "BEARISH"
                     ? "text-red-500"
-                    : "text-gray-500"
+                    : "text-gray-400"
               }`}
             >
               BTC {btcFilter.btcTrend}
@@ -114,7 +114,7 @@ export default function FractalSignals({ data, loading, error, onRetry }: Fracta
         ))}
       </div>
 
-      <div className="text-[11px] text-gray-600 text-center mt-4">
+      <div className="text-[11px] text-gray-400 text-center mt-4">
         Auto-refreshes every 180s &middot; Data: {dataSource || "Kraken"}
       </div>
     </div>

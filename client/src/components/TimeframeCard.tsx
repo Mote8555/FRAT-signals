@@ -17,7 +17,7 @@ const regimeColorMap: Record<string, { text: string; bg: string }> = {
   TRENDING: { text: "text-green-500", bg: "bg-green-500/10" },
   RANDOM: { text: "text-yellow-500", bg: "bg-yellow-500/10" },
   MEAN_REVERTING: { text: "text-red-500", bg: "bg-red-500/10" },
-  UNKNOWN: { text: "text-gray-500", bg: "bg-gray-500/10" },
+  UNKNOWN: { text: "text-gray-400", bg: "bg-gray-500/10" },
 };
 
 export default function TimeframeCard({ tf, pair, data }: TimeframeCardProps) {
@@ -103,7 +103,7 @@ export default function TimeframeCard({ tf, pair, data }: TimeframeCardProps) {
 
       <div className="flex items-center justify-center py-2">
         {noData ? (
-          <span className="text-gray-500 text-[13px]">No data</span>
+          <span className="text-gray-400 text-[13px]">No data</span>
         ) : hasSignal ? (
           <div
             className={`px-7 py-1.5 rounded-md font-bold text-xl border ${signalBg} ${signalText} ${signalBorder}`}
@@ -120,19 +120,19 @@ export default function TimeframeCard({ tf, pair, data }: TimeframeCardProps) {
           <div className="flex gap-2">
             {entryPx != null && (
               <div className="flex-1 min-w-0">
-                <div className="text-[10px] text-gray-500 uppercase font-semibold mb-px">Entry</div>
+                <div className="text-[10px] text-gray-400 uppercase font-semibold mb-px">Entry</div>
                 <div className="text-[13px] font-semibold text-gray-50">${entryPx.toFixed(2)}</div>
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <div className="text-[10px] text-gray-500 uppercase font-semibold mb-px">SL</div>
+              <div className="text-[10px] text-gray-400 uppercase font-semibold mb-px">SL</div>
               <div className="text-[13px] font-semibold text-red-500">
                 {slPx ? `$${slPx.toFixed(0)}` : "-"}
                 {slPct && <span className="text-[10px] ml-0.5">({slPct}%)</span>}
               </div>
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-[10px] text-gray-500 uppercase font-semibold mb-px">TP</div>
+              <div className="text-[10px] text-gray-400 uppercase font-semibold mb-px">TP</div>
               <div className="text-[13px] font-semibold text-green-500">
                 {tpPx ? `$${tpPx.toFixed(0)}` : "-"}
                 {tpPct && <span className="text-[10px] ml-0.5">(+{tpPct}%)</span>}
@@ -143,7 +143,7 @@ export default function TimeframeCard({ tf, pair, data }: TimeframeCardProps) {
           <div className="flex gap-2">
             {data?.lastPrice != null && (
               <div className="flex-1 min-w-0">
-                <div className="text-[10px] text-gray-500 uppercase font-semibold mb-px">Price</div>
+                <div className="text-[10px] text-gray-400 uppercase font-semibold mb-px">Price</div>
                 <div className="text-[13px] font-semibold text-gray-50">
                   ${data.lastPrice.toFixed(0)}
                 </div>
@@ -160,7 +160,7 @@ export default function TimeframeCard({ tf, pair, data }: TimeframeCardProps) {
       )}
 
       {regime && (
-        <div className="text-[11px] text-gray-600 text-center border-t border-slate-800/60 pt-2">
+        <div className="text-[11px] text-gray-400 text-center border-t border-slate-800/60 pt-2">
           H={regime.hurst} &middot; DFA={regime.dfa ?? "N/A"} &middot; conf={regime.confidence}%
         </div>
       )}
@@ -188,7 +188,7 @@ export default function TimeframeCard({ tf, pair, data }: TimeframeCardProps) {
       {showChart && (
         <div className="border-t border-slate-800/60 pt-2">
           {chartLoading && (
-            <div className="h-[214px] animate-pulse rounded-lg bg-slate-800/40 flex items-center justify-center text-xs text-gray-500">
+            <div className="h-[214px] animate-pulse rounded-lg bg-slate-800/40 flex items-center justify-center text-xs text-gray-400">
               Loading chart...
             </div>
           )}
@@ -211,7 +211,7 @@ export default function TimeframeCard({ tf, pair, data }: TimeframeCardProps) {
           {chartData && !chartLoading && (
             <Suspense
               fallback={
-                <div className="h-[214px] animate-pulse rounded-lg bg-slate-800/40 flex items-center justify-center text-xs text-gray-500">
+                <div className="h-[214px] animate-pulse rounded-lg bg-slate-800/40 flex items-center justify-center text-xs text-gray-400">
                   Loading chart...
                 </div>
               }

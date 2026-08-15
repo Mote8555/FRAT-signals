@@ -18,10 +18,10 @@ const FEATURES: Feature[] = [
         <span className="rounded-full border border-green-500/40 bg-green-500/10 px-2.5 py-0.5 text-[10px] font-semibold text-green-500">
           TRENDING
         </span>
-        <span className="rounded-full border border-slate-700 bg-slate-800/60 px-2.5 py-0.5 text-[10px] font-semibold text-gray-500">
+        <span className="rounded-full border border-slate-700 bg-slate-800/60 px-2.5 py-0.5 text-[10px] font-semibold text-gray-400">
           RANDOM
         </span>
-        <span className="rounded-full border border-slate-700 bg-slate-800/60 px-2.5 py-0.5 text-[10px] font-semibold text-gray-500">
+        <span className="rounded-full border border-slate-700 bg-slate-800/60 px-2.5 py-0.5 text-[10px] font-semibold text-gray-400">
           MEAN_REVERTING
         </span>
       </div>
@@ -63,7 +63,7 @@ const FEATURES: Feature[] = [
     body: "Bitcoin's trend and volatility give every altcoin signal a market-wide reality check.",
     visual: (
       <div className="flex items-center gap-1.5">
-        <span className="text-[10px] font-semibold text-gray-500">BTC</span>
+        <span className="text-[10px] font-semibold text-gray-400">BTC</span>
         <span className="rounded-full border border-green-500/40 bg-green-500/10 px-2.5 py-0.5 text-[10px] font-semibold text-green-500">
           BULLISH
         </span>

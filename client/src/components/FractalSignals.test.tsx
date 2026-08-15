@@ -6,7 +6,7 @@ import { fractalDataFixture } from "../test/fixtures";
 
 describe("getConfluenceLabel", () => {
   it("returns no data when nothing is counted", () => {
-    expect(getConfluenceLabel(0, 0, 0)).toMatchObject({ label: "No data", color: "text-gray-500", pct: 0 });
+    expect(getConfluenceLabel(0, 0, 0)).toMatchObject({ label: "No data", color: "text-gray-400", pct: 0 });
   });
 
   it("classifies strong bullish at >= 75%", () => {
@@ -20,7 +20,7 @@ describe("getConfluenceLabel", () => {
   it("classifies bullish at >= 50%", () => {
     expect(getConfluenceLabel(2, 1, 1)).toMatchObject({
       label: "BULLISH (2/4)",
-      color: "text-green-600",
+      color: "text-green-500",
       pct: 50,
     });
   });
@@ -44,7 +44,7 @@ describe("getConfluenceLabel", () => {
   it("classifies bearish at >= 50%", () => {
     expect(getConfluenceLabel(0, 2, 2)).toMatchObject({
       label: "BEARISH (2/4)",
-      color: "text-red-600",
+      color: "text-red-400",
       pct: 50,
     });
   });
@@ -60,7 +60,7 @@ describe("getConfluenceLabel", () => {
   it("classifies ties as neutral", () => {
     expect(getConfluenceLabel(1, 1, 2)).toMatchObject({
       label: "NEUTRAL (1/4)",
-      color: "text-gray-500",
+      color: "text-gray-400",
       pct: 0,
     });
   });

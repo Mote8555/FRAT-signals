@@ -33,10 +33,10 @@ export default function Footer() {
         <div className="grid grid-cols-2 gap-10 md:grid-cols-4">
           <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2.5">
-              <img src="/FRAT.webp" alt="FRAT Signals" className="h-8 w-8 rounded-md" />
+              <img src="/FRAT.webp" alt="" aria-hidden="true" className="h-8 w-8 rounded-md" />
               <span className="font-extrabold tracking-tight text-gray-50">FRAT Signals</span>
             </div>
-            <p className="mt-4 text-sm leading-relaxed text-gray-500">
+            <p className="mt-4 text-sm leading-relaxed text-gray-400">
               Fractal Regime-Adaptive Trading — multi-timeframe crypto signals with Hurst/DFA regime
               detection, trend confirmation and confidence scoring.
             </p>
@@ -59,7 +59,7 @@ export default function Footer() {
                     <li key={link.label}>
                       <Link
                         to={link.to}
-                        className="text-sm text-gray-500 rounded-md focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none hover:text-gray-200 transition-colors"
+                        className="text-sm text-gray-400 rounded-md focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none hover:text-gray-200 transition-colors"
                       >
                         {link.label}
                       </Link>
@@ -68,7 +68,7 @@ export default function Footer() {
                     <li key={link.label}>
                       <a
                         href={link.href}
-                        className="text-sm text-gray-500 rounded-md focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none hover:text-gray-200 transition-colors"
+                        className="text-sm text-gray-400 rounded-md focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none hover:text-gray-200 transition-colors"
                       >
                         {link.label}
                       </a>
@@ -81,11 +81,11 @@ export default function Footer() {
         </div>
 
         <div className="mt-12 flex flex-col items-center gap-3 border-t border-slate-800/60 pt-6 text-center">
-          <p className="text-[11px] text-gray-600 max-w-md">
+          <p className="text-[11px] text-gray-400 max-w-md">
           Not financial advice. Trading cryptocurrencies involves substantial
             risk of loss.
           </p>
-          <p className="text-[11px] text-gray-600">
+          <p className="text-[11px] text-gray-400">
             Data provided by Kraken &middot; FRAT Signals &copy; {new Date().getFullYear()}
           </p>
         </div>

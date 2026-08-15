@@ -50,7 +50,7 @@ export default function App() {
   }, [selected, loadFractal]);
 
   return (
-    <div className="min-h-screen text-gray-50 font-sans">
+    <main className="min-h-screen text-gray-50 font-sans">
       <Toaster
         position="top-right"
         toastOptions={{
@@ -65,7 +65,7 @@ export default function App() {
       <div className={`max-w-[700px] mx-auto ${isMobile ? "px-3 py-6" : "px-5 py-10"}`}>
         <div className={`text-center ${isMobile ? "mb-6" : "mb-8"}`}>
           <h1 className="text-2xl font-extrabold tracking-tight">FRAT Signals</h1>
-          <div className="text-[13px] text-gray-500 mt-1">Fractal Regime-Adaptive Trading</div>
+          <div className="text-[13px] text-gray-400 mt-1">Fractal Regime-Adaptive Trading</div>
         </div>
 
           <div
@@ -80,16 +80,17 @@ export default function App() {
             <button
               onClick={() => loadFractal(selected)}
               disabled={loading}
-              className="px-5 py-2.5 rounded-lg bg-blue-500 text-white font-semibold text-sm border-0 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer hover:bg-blue-600 active:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 transition-colors"
-          >
-            {loading ? (
-              <svg className="animate-spin h-4 w-4 mx-auto" viewBox="0 0 24 24" fill="none">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-              </svg>
-            ) : "Refresh"}
-          </button>
-        </div>
+              aria-label="Refresh signals"
+              className="px-5 py-2.5 rounded-lg bg-blue-600 text-white font-semibold text-sm border-0 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer hover:bg-blue-700 active:bg-blue-800 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 transition-colors"
+            >
+              {loading ? (
+                <svg className="animate-spin h-4 w-4 mx-auto" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+              ) : "Refresh"}
+            </button>
+          </div>
 
         <FractalSignals data={data} loading={loading} error={error} onRetry={() => loadFractal(selected)} />
 
@@ -104,6 +105,6 @@ export default function App() {
           </a>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

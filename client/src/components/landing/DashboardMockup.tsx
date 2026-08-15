@@ -26,7 +26,7 @@ const regimeColors: Record<string, { text: string; bg: string }> = {
   TRENDING: { text: "text-green-500", bg: "bg-green-500/10" },
   RANDOM: { text: "text-yellow-500", bg: "bg-yellow-500/10" },
   MEAN_REVERTING: { text: "text-red-500", bg: "bg-red-500/10" },
-  UNKNOWN: { text: "text-gray-500", bg: "bg-gray-500/10" },
+  UNKNOWN: { text: "text-gray-400", bg: "bg-gray-500/10" },
 };
 
 const components = (regime: number, trend: number, momentum: number, btc: number): ComponentScore[] => [
@@ -108,18 +108,18 @@ function Card({ card, compact }: { card: MockCard; compact: boolean }) {
         <>
           <div className="flex gap-2">
             <div className="flex-1 min-w-0">
-              <div className="text-[10px] text-gray-500 uppercase font-semibold mb-px">Entry</div>
+              <div className="text-[10px] text-gray-400 uppercase font-semibold mb-px">Entry</div>
               <div className="text-[13px] font-semibold text-gray-50">${card.entry.toLocaleString()}</div>
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-[10px] text-gray-500 uppercase font-semibold mb-px">SL</div>
+              <div className="text-[10px] text-gray-400 uppercase font-semibold mb-px">SL</div>
               <div className="text-[13px] font-semibold text-red-500">
                 ${card.sl?.toLocaleString()}
                 {slPct && <span className="text-[10px] ml-0.5">({slPct}%)</span>}
               </div>
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-[10px] text-gray-500 uppercase font-semibold mb-px">TP</div>
+              <div className="text-[10px] text-gray-400 uppercase font-semibold mb-px">TP</div>
               <div className="text-[13px] font-semibold text-green-500">
                 ${card.tp?.toLocaleString()}
                 {tpPct && <span className="text-[10px] ml-0.5">(+{tpPct}%)</span>}
@@ -137,7 +137,7 @@ function Card({ card, compact }: { card: MockCard; compact: boolean }) {
         </>
       )}
 
-      <div className="text-[11px] text-gray-600 text-center border-t border-slate-800/60 pt-2">
+      <div className="text-[11px] text-gray-400 text-center border-t border-slate-800/60 pt-2">
         H={card.hurst} &middot; DFA={card.dfa} &middot; conf={card.confidence}%
       </div>
     </div>
@@ -153,7 +153,7 @@ export default function DashboardMockup({ compact = false }: { compact?: boolean
           <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-slate-800 text-green-500">BTC BULLISH</span>
           <span className="text-[13px] font-semibold text-green-500">STRONG BULLISH (2/4)</span>
         </div>
-        <span className="text-[11px] text-gray-600">Auto-refresh 180s</span>
+        <span className="text-[11px] text-gray-400">Auto-refresh 180s</span>
       </div>
 
       <div className="flex h-1 overflow-hidden bg-slate-800">
@@ -167,7 +167,7 @@ export default function DashboardMockup({ compact = false }: { compact?: boolean
         ))}
       </div>
 
-      <div className="border-t border-slate-800/60 p-3 text-center text-[11px] text-gray-600">
+      <div className="border-t border-slate-800/60 p-3 text-center text-[11px] text-gray-400">
         Auto-refreshes every 180s &middot; Data: Kraken
       </div>
     </div>

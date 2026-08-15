@@ -32,7 +32,7 @@ export default class ErrorBoundary extends Component<Props, State> {
             </p>
             <button
               onClick={this.handleRetry}
-              className="px-5 py-2.5 rounded-lg bg-blue-500 text-white font-semibold text-sm border-0 cursor-pointer"
+              className="px-5 py-2.5 rounded-lg bg-blue-600 text-white font-semibold text-sm border-0 cursor-pointer hover:bg-blue-700 active:bg-blue-800"
             >
               Please Refresh
             </button>

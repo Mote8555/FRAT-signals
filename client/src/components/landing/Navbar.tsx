@@ -10,7 +10,7 @@ export default function Navbar() {
     <header className="sticky top-0 z-40 border-b border-slate-800/60 bg-slate-950/80 backdrop-blur">
       <div className="max-w-7xl mx-auto px-5 py-3.5 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2.5">
-          <img src="/FRAT.webp" alt="FRAT Signals" className="h-8 w-8 rounded-md" />
+          <img src="/FRAT.webp" alt="" aria-hidden="true" className="h-8 w-8 rounded-md" />
           <span className="font-extrabold tracking-tight text-gray-50">FRAT Signals</span>
         </Link>
         <nav className="hidden lg:flex items-center gap-7 text-sm text-gray-400">
@@ -26,7 +26,7 @@ export default function Navbar() {
         </nav>
         <Link
           to="/app"
-          className="px-4 py-2 rounded-lg bg-blue-500 text-white font-semibold text-sm border-0 cursor-pointer hover:bg-blue-600 active:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 transition-colors"
+          className="px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold text-sm border-0 cursor-pointer hover:bg-blue-700 active:bg-blue-800 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 transition-colors"
         >
           View Signals
         </Link>

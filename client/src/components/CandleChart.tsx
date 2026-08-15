@@ -195,7 +195,7 @@ export default function CandleChart({ data, height = 150 }: CandleChartProps) {
       </div>
 
       <div className="flex items-center justify-between mt-1 px-1">
-        <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">VW-MACD</span>
+        <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">VW-MACD</span>
         <span className="flex items-center gap-3 text-[10px] text-gray-400">
           <span className="flex items-center gap-1">
             <span className="w-2 h-0.5 inline-block rounded" style={{ background: MACD_COLOR }} />

@@ -94,7 +94,7 @@ export default function Pipeline() {
                 )}
               </div>
               {idx < STEPS.length - 1 && (
-                <div className="flex flex-col items-center py-2 text-slate-600">
+                <div className="flex flex-col items-center py-2 text-slate-400">
                   <span className="text-[10px] uppercase tracking-wider">Passes filter</span>
                   <ArrowDown className="h-4 w-4" aria-hidden="true" />
                 </div>
