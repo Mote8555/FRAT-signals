@@ -1,5 +1,7 @@
+const config = require("../config.js");
+
 class BTCFilter {
-  calculateKAMA(prices, period = 10, fast = 2, slow = 30) {
+  calculateKAMA(prices, period = config.kama.period, fast = config.kama.fast, slow = config.kama.slow) {
     if (prices.length < period) return null;
     const kama = [];
     for (let i = period - 1; i < prices.length; i++) {
@@ -31,10 +33,10 @@ class BTCFilter {
   }
 
   evaluate(prices) {
-    if (prices.length < 50) return { btcTrend: "NEUTRAL", score: 50 };
+    if (prices.length < config.btcFilter.minDataPoints) return { btcTrend: "NEUTRAL", score: 50 };
 
     const kama = this.calculateKAMA(prices);
-    const ema20 = this.calculateEMA(prices, 20);
+    const ema20 = this.calculateEMA(prices, config.btcFilter.emaPeriod);
     if (!kama || kama.length < 2) return { btcTrend: "NEUTRAL", score: 50 };
 
     const currentPrice = prices[prices.length - 1];
@@ -55,18 +57,19 @@ class BTCFilter {
     const volatility = Math.sqrt(variance);
 
     let trendScore = 0;
-    if (kamaSlope > 0) trendScore += 25;
-    if (kamaSlope < 0) trendScore -= 25;
-    if (priceAboveKAMA) trendScore += 15;
-    if (!priceAboveKAMA) trendScore -= 15;
-    if (priceAboveEMA) trendScore += 10;
-    if (!priceAboveEMA) trendScore -= 10;
+    const cfg = config.btcFilter;
+    if (kamaSlope > 0) trendScore += cfg.kamaSlopeWeight;
+    if (kamaSlope < 0) trendScore -= cfg.kamaSlopeWeight;
+    if (priceAboveKAMA) trendScore += cfg.priceVsKamaWeight;
+    if (!priceAboveKAMA) trendScore -= cfg.priceVsKamaWeight;
+    if (priceAboveEMA) trendScore += cfg.priceVsEmaWeight;
+    if (!priceAboveEMA) trendScore -= cfg.priceVsEmaWeight;
 
-    if (volatility < 0.02) trendScore += 5;
-    if (volatility > 0.05) trendScore -= 5;
+    if (volatility < cfg.lowVolatilityThreshold) trendScore += cfg.lowVolatilityBonus;
+    if (volatility > cfg.highVolatilityThreshold) trendScore -= cfg.highVolatilityPenalty;
 
     const normalizedScore = Math.max(0, Math.min(100, 50 + trendScore));
-    const btcTrend = trendScore > 10 ? "BULLISH" : trendScore < -10 ? "BEARISH" : "NEUTRAL";
+    const btcTrend = trendScore > cfg.bullBearThreshold ? "BULLISH" : trendScore < -cfg.bullBearThreshold ? "BEARISH" : "NEUTRAL";
 
     return { btcTrend, score: normalizedScore };
   }

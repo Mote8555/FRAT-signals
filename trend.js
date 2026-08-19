@@ -1,3 +1,4 @@
+const config = require("./config.js");
 const RegimeEngine = require("./services/regime-engine.js");
 const TimeframeFilter = require("./services/timeframe-filter.js");
 const BTCFilter = require("./services/btc-filter.js");
@@ -22,21 +23,13 @@ class FRATAlgorithm {
     ];
 
     this.pairs = [...this.cryptoPairs];
-
-    this.indicators = {
-      baseline: { name: "KAMA", period: 10, fast: 2, slow: 30 },
-      c1: { name: "T3", period: 8, volumeFactor: 0.7 },
-      c2: { name: "VW-MACD", fast: 12, slow: 26, signal: 9 },
-      exit: { name: "Chandelier", atrPeriod: 22, multiplier: 3 },
-      regime: { trendingSL: 2, trendingTP: 5, strongTrendTP: 8, weakTrendSL: 1.5, weakTrendTP: 2.5 },
-    };
   }
 
   getPairs() {
     return this.cryptoPairs;
   }
 
-  calculateKAMA(prices, period = 10, fast = 2, slow = 30) {
+  calculateKAMA(prices, period = config.kama.period, fast = config.kama.fast, slow = config.kama.slow) {
     if (prices.length < period) return null;
 
     const kama = [];
@@ -64,7 +57,7 @@ class FRATAlgorithm {
     return kama;
   }
 
-  calculateT3(prices, period = 8, volumeFactor = 0.7) {
+  calculateT3(prices, period = config.t3.period, volumeFactor = config.t3.volumeFactor) {
     if (prices.length < period * 6) return null;
 
     const ema1 = this.calculateEMA(prices, period);
@@ -89,7 +82,7 @@ class FRATAlgorithm {
     return t3;
   }
 
-  calculateVWMACD(prices, volumes, fast = 12, slow = 26, signal = 9) {
+  calculateVWMACD(prices, volumes, fast = config.vwmacd.fast, slow = config.vwmacd.slow, signal = config.vwmacd.signal) {
     if (prices.length < slow) return null;
 
     const vwmaFast = this.calculateVWMA(prices, volumes, fast);
@@ -108,7 +101,7 @@ class FRATAlgorithm {
     return { macdLine, signalLine };
   }
 
-  calculateATR(highs, lows, closes, period = 14) {
+  calculateATR(highs, lows, closes, period = config.atr.period) {
     if (closes.length < period + 1) return null;
 
     const tr = [];
@@ -123,16 +116,8 @@ class FRATAlgorithm {
   }
 
   getAdaptiveTargets(atr, regime) {
-    switch (regime) {
-      case "STRONG_TRENDING":
-        return { stopLoss: atr * 2, takeProfit: atr * 8 };
-      case "TRENDING":
-        return { stopLoss: atr * 2, takeProfit: atr * 5 };
-      case "WEAK_TRENDING":
-        return { stopLoss: atr * 1.5, takeProfit: atr * 2.5 };
-      default:
-        return { stopLoss: atr * 1.5, takeProfit: atr * 3 };
-    }
+    const targets = config.adaptiveTargets[regime] || config.adaptiveTargets.default;
+    return { stopLoss: atr * targets.sl, takeProfit: atr * targets.tp };
   }
 
   generateSignal(pair, candleData, options = {}) {
@@ -140,7 +125,10 @@ class FRATAlgorithm {
     const {
       btcPrices = null,
       validatingTrend = null,
+      timeframe = "1d",
     } = options;
+
+    const tfScale = config.timeframeScaling[timeframe] || config.timeframeScaling["1d"];
 
     const kama = this.calculateKAMA(closes);
     const t3 = this.calculateT3(closes);
@@ -161,14 +149,19 @@ class FRATAlgorithm {
     const withinATR = Math.abs(currentPrice - currentKAMA) <= currentATR;
 
     const regime = RegimeEngine.detectRegime(closes);
-    if (regime.regime !== "TRENDING") return null;
+    if (tfScale.regimeCheck && regime.regime !== "TRENDING") return null;
 
-    const tfTrend = TimeframeFilter.evaluateTrend(closes, 20);
+    const tfTrend = TimeframeFilter.evaluateTrend(closes, config.timeframeFilter.trendPeriods.MEDIUM);
     if (tfTrend.trend === "NEUTRAL") return null;
 
-    if (validatingTrend) {
+    // Multi-TF confirmation: validatingTrend is the higher-TF trend direction
+    // If available, signal direction must agree with it
+    if (validatingTrend && validatingTrend !== "NEUTRAL") {
       if (tfTrend.trend !== validatingTrend) return null;
     }
+
+    // TF-scaled minimum trend strength
+    if (tfScale.minTrendStrength > 0 && Math.abs(tfTrend.strength) < tfScale.minTrendStrength) return null;
 
     const btcResult = btcPrices
       ? BTCFilter.evaluate(btcPrices)
@@ -185,7 +178,7 @@ class FRATAlgorithm {
       btcFilter: btcResult,
     });
 
-    if (!ConfidenceEngine.shouldTrade(confidence.grade)) return null;
+    if (!ConfidenceEngine.shouldTrade(confidence.grade, confidence.score, tfScale.confidenceMultiplier)) return null;
 
     const isLong = t3Slope > 0 && priceAboveKAMA && withinATR && macdBullish;
     const isShort = t3Slope < 0 && !priceAboveKAMA && withinATR && !macdBullish;
@@ -193,7 +186,7 @@ class FRATAlgorithm {
     if (!isLong && !isShort) return null;
 
     const side = isLong ? "BUY" : "SELL";
-    const regimeStrength = regime.confidence > 80 ? "STRONG_TRENDING" : regime.confidence > 60 ? "TRENDING" : "WEAK_TRENDING";
+    const regimeStrength = regime.confidence > config.confidence.gradeThresholds.A ? "STRONG_TRENDING" : regime.confidence > config.confidence.gradeThresholds.B ? "TRENDING" : "WEAK_TRENDING";
     const targets = this.getAdaptiveTargets(currentATR, regimeStrength);
 
     if (side === "SELL") {

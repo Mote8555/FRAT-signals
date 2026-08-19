@@ -1,8 +1,10 @@
+const config = require("../config.js");
+
 class RiskEngine {
-  constructor(config = {}) {
-    this.defaultRiskPercent = config.riskPercent ?? 1.0;
-    this.minPositionSize = config.minPositionSize ?? 0.001;
-    this.maxPositionSize = config.maxPositionSize ?? 10;
+  constructor(overrides = {}) {
+    this.defaultRiskPercent = overrides.riskPercent ?? config.risk.riskPercent;
+    this.minPositionSize = overrides.minPositionSize ?? config.risk.minPositionSize;
+    this.maxPositionSize = overrides.maxPositionSize ?? config.risk.maxPositionSize;
   }
 
   calculate(inputs) {
@@ -35,10 +37,8 @@ class RiskEngine {
   }
 
   adjustForRegime(baseSize, regime) {
-    if (regime === "STRONG_TRENDING") return baseSize * 1.0;
-    if (regime === "TRENDING") return baseSize * 1.0;
-    if (regime === "WEAK_TRENDING") return baseSize * 0.5;
-    return baseSize * 0.25;
+    const mult = config.risk.regimeMultipliers[regime] ?? config.risk.regimeMultipliers.default;
+    return baseSize * mult;
   }
 }
 

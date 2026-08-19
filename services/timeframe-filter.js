@@ -1,13 +1,11 @@
+const config = require("../config.js");
+
 class TimeframeFilter {
   constructor() {
-    this.trendPeriods = {
-      SHORT: 20,
-      MEDIUM: 60,
-      LONG: 120,
-    };
+    this.trendPeriods = config.timeframeFilter.trendPeriods;
   }
 
-  calculateKAMA(prices, period = 10, fast = 2, slow = 30) {
+  calculateKAMA(prices, period = config.kama.period, fast = config.kama.fast, slow = config.kama.slow) {
     if (prices.length < period) return null;
 
     const kama = [];
@@ -50,8 +48,8 @@ class TimeframeFilter {
     let strength = 0;
     if (slope > 0) strength += 1;
     if (slope < 0) strength -= 1;
-    if (pricePosition > 0.01) strength += 1;
-    if (pricePosition < -0.01) strength -= 1;
+    if (pricePosition > config.timeframeFilter.pricePositionThreshold) strength += 1;
+    if (pricePosition < -config.timeframeFilter.pricePositionThreshold) strength -= 1;
 
     if (strength >= 1) return { trend: "BULLISH", strength, slope };
     if (strength <= -1) return { trend: "BEARISH", strength, slope: -slope };

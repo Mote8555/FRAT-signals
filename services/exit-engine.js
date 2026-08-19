@@ -1,9 +1,11 @@
+const config = require("../config.js");
+
 class ExitEngine {
   constructor() {
-    this.chandelierMultiplier = 3;
-    this.atrPeriod = 22;
-    this.partialTakeProfitR = 3;
-    this.partialSize = 0.5;
+    this.chandelierMultiplier = config.exit.chandelierMultiplier;
+    this.atrPeriod = config.exit.atrPeriod;
+    this.partialTakeProfitR = config.exit.partialTakeProfitR;
+    this.partialSize = config.exit.partialSize;
   }
 
   calculateChandelierExit(highs, lows, closes, side) {
@@ -32,10 +34,10 @@ class ExitEngine {
 
   calculateTrail(currentPrice, entryPrice, side, highestSinceEntry, lowestSinceEntry, atr) {
     if (side === "LONG") {
-      const trailStop = highestSinceEntry - atr * 2;
+      const trailStop = highestSinceEntry - atr * config.exit.trailMultiplier;
       if (currentPrice < trailStop) return { exit: true, reason: "TRAIL_STOP" };
     } else {
-      const trailStop = lowestSinceEntry + atr * 2;
+      const trailStop = lowestSinceEntry + atr * config.exit.trailMultiplier;
       if (currentPrice > trailStop) return { exit: true, reason: "TRAIL_STOP" };
     }
     return { exit: false, reason: null };

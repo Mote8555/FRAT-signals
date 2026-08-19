@@ -1,3 +1,4 @@
+const config = require("../config.js");
 const metrics = require("./metrics.js");
 const ExitEngine = require("../services/exit-engine.js");
 const RiskEngine = require("../services/risk-engine.js");
@@ -6,13 +7,14 @@ const TimeframeFilter = require("../services/timeframe-filter.js");
 class BacktestEngine {
   async run(strategy, candleData, symbol = "BACKTEST", options = {}) {
     const {
-      initialBalance = 10000,
-      commission = 0.001,
-      slippage = 0.001,
+      initialBalance = config.backtest.initialBalance,
+      commission = config.backtest.commission,
+      slippage = config.backtest.slippage,
       btcCloses = null,
+      timeframe = "1h",
     } = options;
 
-    const riskEngine = new RiskEngine({ riskPercent: 1.0 });
+    const riskEngine = new RiskEngine();
     const trades = [];
     let balance = initialBalance;
     let openPosition = null;
@@ -20,11 +22,20 @@ class BacktestEngine {
     let lowestSinceEntry = null;
     let partialTaken = false;
 
+    // Apply TF-scaled exit multipliers
+    const tfScale = (config.timeframeScaling || {})[timeframe] || {};
+    if (tfScale.exitMultiplier && tfScale.exitMultiplier !== 1.0) {
+      const origChandelier = config.exit.chandelierMultiplier;
+      const origTrail = config.exit.trailMultiplier;
+      config.exit.chandelierMultiplier = origChandelier * tfScale.exitMultiplier;
+      config.exit.trailMultiplier = origTrail * tfScale.exitMultiplier;
+    }
+
     function applySlippage(price, side) {
       return side === "BUY" ? price * (1 + slippage) : price * (1 - slippage);
     }
 
-    for (let i = 200; i < candleData.length; i++) {
+    for (let i = config.backtest.warmupPeriod; i < candleData.length; i++) {
       const slice = {
         opens: candleData.slice(0, i + 1).map(c => c.open),
         highs: candleData.slice(0, i + 1).map(c => c.high),
@@ -38,15 +49,16 @@ class BacktestEngine {
       // Build BTC slice for this candle index
       const btcSlice = btcCloses ? btcCloses.slice(0, i + 1) : null;
 
-      // Build 4H trend from downsampling 1H candles (every 4th candle)
+      // Build validating trend from downsampled candles (configurable per timeframe)
       let validatingTrend = null;
-      if (i >= 4) {
-        const fourHourCloses = [];
-        for (let j = 0; j <= i; j += 4) {
-          fourHourCloses.push(candleData[j].close);
+      const downsampleFactor = (config.backtest.timeframeDownsample || {})[timeframe] ?? 0;
+      if (downsampleFactor > 0 && i >= downsampleFactor) {
+        const higherTFCloses = [];
+        for (let j = 0; j <= i; j += downsampleFactor) {
+          higherTFCloses.push(candleData[j].close);
         }
-        if (fourHourCloses.length > 65) {
-          validatingTrend = TimeframeFilter.evaluateTrend(fourHourCloses, 60).trend;
+        if (higherTFCloses.length > config.backtest.validatingTrendMinCandles) {
+          validatingTrend = TimeframeFilter.evaluateTrend(higherTFCloses, config.backtest.validatingTrendPeriod).trend;
         }
       }
 
@@ -198,6 +210,7 @@ class BacktestEngine {
         const signal = strategy.generateSignal(symbol, slice, {
           btcPrices: btcSlice,
           validatingTrend,
+          timeframe,
         });
         if (signal) {
           const slDistance = signal.stopLoss ? Math.abs(signal.entryPrice - signal.stopLoss) : 1;

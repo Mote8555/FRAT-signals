@@ -1,3 +1,4 @@
+const config = require("../config.js");
 const algo = require("../trend.js");
 const engine = require("./engine.js");
 const KrakenExchange = require("../services/exchange/kraken.js");
@@ -5,14 +6,22 @@ const KrakenExchange = require("../services/exchange/kraken.js");
 const args = process.argv.slice(2);
 
 function getArg(name, fallback) {
-  const idx = args.indexOf(`--${name}`);
-  return idx !== -1 && args[idx + 1] ? args[idx + 1] : fallback;
+  for (const arg of args) {
+    if (arg === `--${name}`) {
+      const idx = args.indexOf(arg);
+      return args[idx + 1] || fallback;
+    }
+    if (arg.startsWith(`--${name}=`)) {
+      return arg.slice(`--${name}=`.length);
+    }
+  }
+  return fallback;
 }
 
 const symbol = getArg("symbol", "BCH/USDT");
 const timeframe = getArg("timeframe", "1d");
-const limit = parseInt(getArg("limit", "500"), 10);
-const balance = parseFloat(getArg("balance", "10000"));
+const limit = parseInt(getArg("limit", "1500"), 10);
+const balance = parseFloat(getArg("balance", String(config.backtest.initialBalance)));
 
 async function run() {
   console.log(
@@ -52,9 +61,10 @@ async function run() {
 
   const result = await engine.run(algo, ohlcv, symbol, {
     initialBalance: balance,
-    commission: 0.001,
-    slippage: 0.001,
+    commission: config.backtest.commission,
+    slippage: config.backtest.slippage,
     btcCloses,
+    timeframe,
   });
 
   console.log("=== Results ===");

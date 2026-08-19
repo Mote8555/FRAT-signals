@@ -1,12 +1,14 @@
+const config = require("../config.js");
+
 class RegimeEngine {
   calculateHurst(prices) {
-    if (prices.length < 100) return null;
+    if (prices.length < config.regime.minDataPoints) return null;
 
-    const maxLag = Math.min(Math.floor(prices.length / 4), 100);
+    const maxLag = Math.min(Math.floor(prices.length / 4), config.regime.maxLagCap);
     const lags = [];
     const rsValues = [];
 
-    for (let lag = 10; lag <= maxLag; lag += 5) {
+    for (let lag = config.regime.minLag; lag <= maxLag; lag += config.regime.lagStep) {
       const segments = Math.floor(prices.length / lag);
       let rsSum = 0;
 
@@ -42,7 +44,7 @@ class RegimeEngine {
   }
 
   calculateDFA(prices) {
-    if (prices.length < 100) return null;
+    if (prices.length < config.regime.minDataPoints) return null;
 
     const profile = [];
     const mean = prices.reduce((a, b) => a + b, 0) / prices.length;
@@ -52,12 +54,12 @@ class RegimeEngine {
       profile.push(cumSum);
     }
 
-    const minLag = 10;
-    const maxLag = Math.min(Math.floor(prices.length / 4), 100);
+    const minLag = config.regime.minLag;
+    const maxLag = Math.min(Math.floor(prices.length / 4), config.regime.maxLagCap);
     const lags = [];
     const flucts = [];
 
-    for (let lag = minLag; lag <= maxLag; lag += 5) {
+    for (let lag = minLag; lag <= maxLag; lag += config.regime.lagStep) {
       const segments = Math.floor(profile.length / lag);
       let f2Sum = 0;
 
@@ -104,20 +106,20 @@ class RegimeEngine {
     let regime;
     let confidence;
 
-    if (hurst > 0.55) {
+    if (hurst > config.regime.trendingThreshold) {
       regime = "TRENDING";
-      confidence = Math.min(100, Math.round((hurst - 0.55) * 200 + 60));
-    } else if (hurst >= 0.45) {
+      confidence = Math.min(100, Math.round((hurst - config.regime.trendingThreshold) * 200 + 60));
+    } else if (hurst >= config.regime.randomLower) {
       regime = "RANDOM";
       confidence = Math.min(100, Math.round((1 - Math.abs(hurst - 0.5) * 2) * 100));
     } else {
       regime = "MEAN_REVERTING";
-      confidence = Math.min(100, Math.round((0.45 - hurst) * 200 + 60));
+      confidence = Math.min(100, Math.round((config.regime.randomLower - hurst) * 200 + 60));
     }
 
     if (dfa !== null) {
-      if (dfa > 1.0 && hurst > 0.55) confidence = Math.min(100, confidence + 10);
-      if (dfa < 0.5 && hurst < 0.45) confidence = Math.min(100, confidence + 10);
+      if (dfa > 1.0 && hurst > config.regime.trendingThreshold) confidence = Math.min(100, confidence + config.regime.dfaTrendingBoost);
+      if (dfa < 0.5 && hurst < config.regime.randomLower) confidence = Math.min(100, confidence + config.regime.dfaMeanRevertingBoost);
     }
 
     return { regime, hurst: Math.round(hurst * 100) / 100, dfa: dfa ? Math.round(dfa * 100) / 100 : null, confidence };

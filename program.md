@@ -44,6 +44,7 @@ A fractal regime-adaptive cryptocurrency signal dashboard powered by the Kraken 
 
 ```
 frat-signals/
+├── config.js                        # Central configuration — all tunable params
 ├── trend.js                         # Core algorithm: indicators + signal generation
 ├── server.js                        # Express API server (port 3001, Kraken)
 ├── package.json                     # Root dependencies + dev scripts
@@ -54,15 +55,18 @@ frat-signals/
 │   ├── timeframe-filter.js          # KAMA trend filter (single-period evaluation)
 │   ├── btc-filter.js                # Bitcoin market condition filter
 │   ├── confidence-engine.js         # Weighted component scoring + grade
-│   ├── risk-engine.js               # Position sizing (1% risk) — NOT YET WIRED
-│   ├── exit-engine.js               # Chandelier exit + trailing + partial TP — NOT YET WIRED
+│   ├── risk-engine.js               # Position sizing (1% risk) — used by backtesting
+│   ├── exit-engine.js               # Chandelier exit + trailing + partial TP — used by backtesting
 │   ├── database.js                  # SQLite trade journal — NOT YET WIRED
 │   └── exchange/
 │       └── kraken.js                # CCXT Kraken spot wrapper
 │
 ├── backtesting/
-│   ├── engine.js                    # Historical simulation engine — NOT YET WIRED
-│   └── metrics.js                   # Performance statistics (Sharpe, Sortino, DD, CAGR) — NOT YET WIRED
+│   ├── engine.js                    # Historical simulation engine
+│   ├── metrics.js                   # Performance statistics (Sharpe, Sortino, DD, CAGR)
+│   ├── run.js                       # CLI entry point (npm run backtest)
+│   ├── optimize.js                  # Multi-TF parameter sweep orchestrator
+│   └── optimize-worker.js           # Single-backtest worker for optimizer
 │
 └── client/
     ├── package.json                 # Vite + React 18 + TypeScript dependencies
@@ -101,32 +105,39 @@ The `FRATAlgorithm` class is the system's central orchestrator. It imports all s
 
 | Indicator | Role | Parameters |
 |-----------|------|------------|
-| **KAMA** (Kaufman's Adaptive Moving Average) | Baseline trend filter | period=10, fast=2, slow=30 |
-| **T3** (Tillson's T3 Moving Average) | Smoother trend confirmation | period=8, volumeFactor=0.7 |
-| **VW-MACD** (Volume-Weighted MACD) | Momentum + volume combo | fast=12, slow=26, signal=9 |
+| **KAMA** (Kaufman's Adaptive Moving Average) | Baseline trend filter | period=20, fast=2, slow=50 |
+| **T3** (Tillson's T3 Moving Average) | Smoother trend confirmation | period=5, volumeFactor=0.5 |
+| **VW-MACD** (Volume-Weighted MACD) | Momentum + volume combo | fast=15, slow=30, signal=10 |
 | **ATR** (Average True Range) | Volatility measurement | period=14 |
+
+All indicator parameters are centralized in `config.js` and can be tuned without touching source code.
 
 ### Signal Generation — `generateSignal(pair, candleData, options)`
 
 Entry conditions (all must pass):
 
-1. **Regime** → must be `"TRENDING"` (Hurst > 0.55)
+1. **Regime** → must be `"TRENDING"` (Hurst > 0.55). Regime check can be disabled per-TF via `timeframeScaling[tf].regimeCheck`.
 2. **Timeframe trend** → must not be `"NEUTRAL"`
-3. **Validating trend** (optional) → when supplied, must match the primary trend
-4. **Momentum** → VW-MACD line > signal line (for BUY), reverse for SELL
-5. **KAMA position** → price must be on correct side of KAMA
-6. **ATR proximity** → price within 1 ATR of KAMA
-7. **T3 slope** → positive for BUY, negative for SELL
-8. **Confidence** → weighted score must grade ≥ 60 (not "IGNORE")
+3. **Validating trend** (optional) → when supplied, must match the primary trend (multi-TF confirmation)
+4. **TF-scaled min trend strength** → `|strength|` must meet `timeframeScaling[tf].minTrendStrength` (0 for 1d, 2 for 15m)
+5. **Momentum** → VW-MACD line > signal line (for BUY), reverse for SELL
+6. **KAMA position** → price must be on correct side of KAMA
+7. **ATR proximity** → price within 1 ATR of KAMA
+8. **T3 slope** → positive for BUY, negative for SELL
+9. **Confidence** → weighted score must pass TF-scaled threshold (score ≥ 70 × `confidenceMultiplier`)
+
+The `options.timeframe` parameter selects which `timeframeScaling` profile to apply. This allows the same algorithm to use tighter filters on noisy shorter timeframes and relaxed filters on longer ones.
 
 ### Adaptive TP/SL — `getAdaptiveTargets(atr, regime)`
 
 | Regime Strength | Stop Loss | Take Profit |
 |-----------------|-----------|-------------|
 | STRONG_TRENDING (confidence > 80) | 2 × ATR | 8 × ATR |
-| TRENDING (confidence > 60) | 2 × ATR | 5 × ATR |
+| TRENDING (confidence > 70) | 2 × ATR | 5 × ATR |
 | WEAK_TRENDING | 1.5 × ATR | 2.5 × ATR |
 | Default | 1.5 × ATR | 3 × ATR |
+
+Note: Exit multipliers from `timeframeScaling` further scale these targets in the backtesting engine.
 
 ### Supported Pairs (13 via Kraken)
 
@@ -187,9 +198,11 @@ Detects market regime using two independent methods:
 
 Evaluates trend using KAMA slope and price position relative to period average. The `evaluateTrend(prices, period)` method scores on two axes (slope direction + price position), returning `"BULLISH"`, `"BEARISH"`, or `"NEUTRAL"`.
 
-Contains two unused methods:
-- `filter(prices15m, prices1H, prices4H, pricesDaily)` — multi-timeframe trend evaluation (not wired)
-- `isEntryAllowed(trend, side)` — entry gate based on medium + long term trend (not wired)
+Multi-TF confirmation is achieved through `backtesting/engine.js`, which builds a `validatingTrend` by downsampling every Nth candle to simulate a higher timeframe. This validating trend is passed to `generateSignal()` where it must match the current TF's trend direction.
+
+Contains two helper methods:
+- `filter(prices15m, prices1H, prices4H, pricesDaily)` — multi-timeframe trend evaluation
+- `isEntryAllowed(trend, side)` — entry gate based on medium + long term trend
 
 ---
 
@@ -218,11 +231,13 @@ Weighted composite scoring system with 4 components:
 
 Momentum thresholds are computed relative to current price (`Math.abs(t3Slope / currentPrice)`) so the same thresholds work across assets of vastly different price scales.
 
-**Grades**: 90+ → A+, 80-89 → A, 70-79 → B, 60-69 → C, <60 → IGNORE (no trade)
+**Grades**: 90+ → A+, 80-89 → A, 70-79 → B, 70 → C, <70 → IGNORE (no trade)
+
+The `shouldTrade(grade, score, multiplier)` method applies a TF-scaled threshold: when `multiplier > 1.0`, the C threshold is raised (e.g., 1.4× for 1h = score must be ≥ 98 to pass as C). Grades A+, A, and B always pass regardless of multiplier.
 
 ---
 
-### `services/risk-engine.js` — NOT WIRED
+### `services/risk-engine.js` — Used by backtesting
 
 Position sizing based on fixed fractional risk:
 ```js
@@ -232,18 +247,18 @@ positionSize = riskAmount / stopDistance
 
 Regime-adjusted sizing: TRENDING/STRONG_TRENDING = 1.0×, WEAK_TRENDING = 0.5×, others = 0.25×.
 
-Exported as a class (constructor) but never imported in the current signal pipeline.
+Exported as a class (constructor). Used by `backtesting/engine.js` for position sizing during simulation.
 
 ---
 
-### `services/exit-engine.js` — NOT WIRED
+### `services/exit-engine.js` — Used by backtesting
 
 Three-layer exit management:
 - **Chandelier Exit**: `recentHigh - 3×ATR` for longs, `recentLow + 3×ATR` for shorts
-- **ATR Trail**: 2×ATR trailing stop from highest/lowest since entry
-- **Partial Profit**: Take 50% off at 3R (3× risk), trail the remainder
+- **ATR Trail**: 2.5×ATR trailing stop from highest/lowest since entry
+- **Partial Profit**: Take 50% off at 4R (4× risk), trail the remainder
 
-Exported as a singleton but never imported in the current signal pipeline.
+Exported as a singleton. Used by `backtesting/engine.js` for exit management during simulation. Exit multipliers are TF-scaled via `config.timeframeScaling[tf].exitMultiplier` — shorter timeframes get tighter stops (e.g., 0.6× for 15m = chandelier 1.8, trail 1.5).
 
 ---
 
@@ -279,11 +294,11 @@ fetchBalance()
 
 ---
 
-## Backtesting — NOT WIRED
+## Backtesting
 
 ### `backtesting/engine.js`
 
-Iterates over historical OHLCV data slice by slice, calling the strategy's `generateSignal()` at each step. Simulates position entry/exit with configurable commission (0.1%) and slippage (0.1%).
+Iterates over historical OHLCV data slice by slice, calling the strategy's `generateSignal()` at each step. Simulates position entry/exit with configurable commission (0.1%) and slippage (0.1%). Applies TF-scaled exit multipliers from `config.timeframeScaling`. Builds validating trend from downsampled candles for multi-TF confirmation.
 
 ### `backtesting/metrics.js`
 
@@ -299,7 +314,52 @@ Computes from trade list:
 | CAGR | (final/initial)^(1/years) - 1 |
 | Total Return | (final - initial) / initial × 100 |
 
-Both modules exist but are **not wired into any run script, CLI command, or API endpoint**.
+### `backtesting/run.js` — CLI entry point
+
+```bash
+npm run backtest -- --symbol=BNB/USDT --timeframe=1d --limit=500 --balance=10000
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--symbol` | `BCH/USDT` | Trading pair to backtest |
+| `--timeframe` | `4h` | Candle timeframe (`15m`, `1h`, `4h`, `1d`) |
+| `--limit` | `1500` | Number of candles to fetch (min 201) |
+| `--balance` | `10000` | Starting account balance |
+
+### `backtesting/optimize.js` — Multi-TF parameter sweep
+
+Runs all parameter combinations across multiple timeframes in parallel (one worker per backtest). Aggregates results into a cross-TF summary.
+
+```bash
+node backtesting/optimize.js --symbol=BNB/USDT --timeframes=15m,1h,4h,1d --sweep=all --limit=500
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--symbol` | `BCH/USDT` | Trading pair |
+| `--timeframes` | `1d` | Comma-separated TFs to test |
+| `--sweep` | `all` | Which group: `kama`, `t3`, `vwmacd`, `regime`, `exits`, `confidence`, `all` |
+| `--limit` | `500` | Candles per TF |
+
+**Sweep groups** — each tests a range of values for one indicator while holding others at config defaults:
+
+| Group | Parameters tested |
+|-------|-------------------|
+| `kama` | 10 combos: period ∈ {5,8,10,12,15,20} × fast ∈ {1,2,3} × slow ∈ {20,25,30,35,40,50,60} |
+| `t3` | 10 combos: period ∈ {5,6,8,10,12} × volumeFactor ∈ {0.5,0.6,0.7,0.8} |
+| `vwmacd` | 8 combos: fast/slow/signal ∈ standard MACD variants |
+| `regime` | 7 combos: trendingThreshold ∈ {0.5–0.6} × randomLower ∈ {0.4–0.45} |
+| `exits` | 8 combos: chandelier × trail × partialTP × tpTarget × slTarget |
+| `confidence` | 7 combos: C threshold ∈ {50–70} × regime weight × momentum weight |
+
+**Composite scoring** (for ranking): `sharpe×0.4 + sortino×0.3 + profitFactor×0.2 − maxDrawdown×0.1`
+
+**Cross-TF aggregation**: Results are grouped by parameter set, averaged across all timeframes, and ranked by average score. The summary shows the top 15 most consistent parameter combos and which TFs they appeared in.
+
+### `backtesting/optimize-worker.js`
+
+Single-backtest worker spawned by `optimize.js`. Reads pre-fetched OHLCV from a temp JSON file, applies config overrides via deep-merge, runs one backtest, and outputs JSON metrics to stdout.
 
 ---
 
@@ -418,14 +478,51 @@ Netlify builds and deploys the client. The API is proxied to `https://frat-signa
 
 ---
 
-## Configuration
+## Configuration — `config.js`
 
-### Risk Parameters (in code)
-- `riskPercent`: 1.0 (default, change in `RiskEngine` constructor)
-- Min/max position sizes: 0.001 / 10.0 (in `RiskEngine` constructor)
+All tunable parameters are centralized in `config.js`. No source files need to be touched to adjust indicators, thresholds, exits, or backtesting settings.
 
-### Confidence Weights
-- **Kraken Spot**: Regime: 30, Trend: 25, Momentum: 25, BTC Filter: 20
+### Config sections
+
+| Section | Description |
+|---------|-------------|
+| `kama` | KAMA indicator: period, fast, slow |
+| `t3` | T3 indicator: period, volumeFactor |
+| `vwmacd` | VW-MACD indicator: fast, slow, signal |
+| `atr` | ATR period |
+| `regime` | Hurst/DFA thresholds, lag settings, DFA boosts |
+| `timeframeFilter` | Trend evaluation periods (SHORT/MEDIUM/LONG) |
+| `btcFilter` | BTC market filter weights and thresholds |
+| `confidence` | Component weights (regime/trend/momentum/btc) and grade thresholds |
+| `risk` | Risk percent, position size limits, regime multipliers |
+| `adaptiveTargets` | TP/SL ATR multipliers per regime strength |
+| `exit` | Chandelier multiplier, trail multiplier, partial TP R-multiple |
+| `timeframeScaling` | Per-TF multipliers (see below) |
+| `backtest` | Initial balance, commission, slippage, warmup, downsample factors |
+
+### Timeframe Scaling — `config.timeframeScaling`
+
+Per-timeframe multipliers that tighten rules for shorter, noisier timeframes. Applied in `trend.js` via `options.timeframe`.
+
+| TF | Confidence Mult. | Regime Check | Exit Mult. | Min Trend Strength | Effect |
+|----|-------------------|--------------|------------|-------------------|--------|
+| **1d** | 1.0× (baseline) | yes | 1.0× | 0 | No changes — baseline behavior |
+| **4h** | 1.2× | yes | 0.85× | 1 | Raise grade threshold 20%, tighter stops |
+| **1h** | 1.4× | yes | 0.7× | 1 | Raise grade threshold 40%, tighter stops |
+| **15m** | 1.6× | yes | 0.6× | 2 | Raise grade threshold 60%, tightest stops, require strong trend |
+
+The exit multiplier scales `config.exit.chandelierMultiplier` and `config.exit.trailMultiplier`. For example, with baseline chandelier=3 and 1h multiplier=0.7, the effective chandelier becomes 2.1.
+
+### Backtesting downsample factors — `config.backtest.timeframeDownsample`
+
+Simulates higher-TF validating trends by taking every Nth candle:
+
+| TF | Downsample | Validates against |
+|----|------------|-------------------|
+| 1d | 0 (skip) | No higher TF available |
+| 4h | 4 | → 1D trend |
+| 1h | 4 | → 4H trend |
+| 15m | 4 | → 1H trend |
 
 ---
 

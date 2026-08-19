@@ -1,11 +1,8 @@
+const config = require("../config.js");
+
 class ConfidenceEngine {
   constructor() {
-    this.weights = {
-      regime: 30,
-      trend: 25,
-      momentum: 25,
-      btcFilter: 20,
-    };
+    this.weights = config.confidence.weights;
   }
 
   score(inputs) {
@@ -92,15 +89,19 @@ class ConfidenceEngine {
   }
 
   grade(score) {
-    if (score >= 90) return "A+";
-    if (score >= 80) return "A";
-    if (score >= 70) return "B";
-    if (score >= 60) return "C";
+    const t = config.confidence.gradeThresholds;
+    if (score >= t["A+"]) return "A+";
+    if (score >= t.A) return "A";
+    if (score >= t.B) return "B";
+    if (score >= t.C) return "C";
     return "IGNORE";
   }
 
-  shouldTrade(grade) {
-    return grade !== "IGNORE";
+  shouldTrade(grade, score, multiplier = 1.0) {
+    if (multiplier === 1.0) return grade !== "IGNORE";
+    if (grade === "A+" || grade === "A" || grade === "B") return true;
+    const t = config.confidence.gradeThresholds;
+    return score >= Math.round(t.C * multiplier);
   }
 }
 
