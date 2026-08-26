@@ -29,6 +29,9 @@ interface CandlePoint {
 interface CandleChartProps {
   data: ChartData;
   height?: number;
+  entryPrice?: number;
+  stopLoss?: number;
+  takeProfit?: number;
 }
 
 const UP_COLOR = "#22c55e";
@@ -95,7 +98,7 @@ function ChartTooltip({ active, payload }: TooltipContentProps) {
   );
 }
 
-export default function CandleChart({ data, height = 150 }: CandleChartProps) {
+export default function CandleChart({ data, height = 150, entryPrice, stopLoss, takeProfit }: CandleChartProps) {
   const points = useMemo<CandlePoint[]>(
     () =>
       data.timestamps.map((ts, idx) => ({
@@ -119,9 +122,15 @@ export default function CandleChart({ data, height = 150 }: CandleChartProps) {
       if (p.low < lo) lo = p.low;
       if (p.high > hi) hi = p.high;
     }
+    for (const v of [entryPrice, stopLoss, takeProfit]) {
+      if (v != null) {
+        if (v < lo) lo = v;
+        if (v > hi) hi = v;
+      }
+    }
     const pad = (hi - lo) * 0.03 || hi * 0.01 || 1;
     return [lo - pad, hi + pad];
-  }, [points]);
+  }, [points, entryPrice, stopLoss, takeProfit]);
 
   const maxVolume = useMemo(() => {
     let max = 0;
@@ -181,6 +190,15 @@ export default function CandleChart({ data, height = 150 }: CandleChartProps) {
             <YAxis domain={domain} width={44} tickFormatter={formatPrice} tick={TICK_STYLE} />
             <YAxis yAxisId="vol" orientation="right" hide domain={[0, maxVolume]} />
             <Tooltip content={ChartTooltip} />
+            {takeProfit != null && (
+              <ReferenceLine y={takeProfit} stroke="#22c55e" strokeDasharray="4 2" label={{ value: "TP", position: "right", fill: "#22c55e", fontSize: 10 }} />
+            )}
+            {entryPrice != null && (
+              <ReferenceLine y={entryPrice} stroke="#64748b" strokeDasharray="2 2" label={{ value: "Entry", position: "right", fill: "#64748b", fontSize: 10 }} />
+            )}
+            {stopLoss != null && (
+              <ReferenceLine y={stopLoss} stroke="#ef4444" strokeDasharray="4 2" label={{ value: "SL", position: "right", fill: "#ef4444", fontSize: 10 }} />
+            )}
             <Bar dataKey="close" shape={candleShape} isAnimationActive={false} />
             <Bar dataKey="volume" yAxisId="vol" isAnimationActive={false}>
               {points.map((p) => (

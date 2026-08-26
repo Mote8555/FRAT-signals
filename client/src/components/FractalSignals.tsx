@@ -1,5 +1,6 @@
-import type { FractalData } from "../api";
+import type { FractalData, ScanResult } from "../api";
 import TimeframeCard from "./TimeframeCard";
+import TradeInsightCard from "./TradeInsightCard";
 import Skeleton from "./Skeleton";
 import useMediaQuery from "../useMediaQuery";
 
@@ -8,6 +9,9 @@ interface FractalSignalsProps {
   loading: boolean;
   error: string | null;
   onRetry?: () => void;
+  scanResult?: ScanResult | null;
+  scanLoading?: boolean;
+  onScan?: () => void;
 }
 
 const TF_ORDER = ["15m", "1h", "4h", "1d"];
@@ -33,7 +37,7 @@ export function getConfluenceLabel(bullish: number, bearish: number, neutral: nu
   return { label: `NEUTRAL (${tied}/${total})`, color: "text-gray-400", pct: 0 };
 }
 
-export default function FractalSignals({ data, loading, error, onRetry }: FractalSignalsProps) {
+export default function FractalSignals({ data, loading, error, onRetry, scanResult, scanLoading, onScan }: FractalSignalsProps) {
   const isMobile = useMediaQuery("(max-width: 640px)");
 
   if (loading) {
@@ -113,6 +117,67 @@ export default function FractalSignals({ data, loading, error, onRetry }: Fracta
           <TimeframeCard key={tf} tf={tf} pair={pair} data={timeframes?.[tf] || null} />
         ))}
       </div>
+
+      {(() => {
+        const activeSignals = TF_ORDER.filter((tf) => timeframes?.[tf]?.signal).map((tf) => ({
+          tf,
+          signal: timeframes![tf]!.signal!,
+        }));
+
+        const hasScanResults = scanResult && scanResult.signals.length > 0;
+        const showScan = hasScanResults || scanLoading;
+
+        return (
+          <div className="mt-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">
+                {showScan ? "All Pairs Signals" : "Trade Insights"}
+              </div>
+              {onScan && (
+                <button
+                  onClick={onScan}
+                  disabled={scanLoading}
+                  className="px-3 py-1 rounded-lg bg-blue-600/20 text-blue-400 text-[11px] font-semibold border border-blue-500/30 cursor-pointer hover:bg-blue-600/30 active:bg-blue-600/40 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+                >
+                  {scanLoading ? (
+                    <span className="flex items-center gap-1.5">
+                      <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                      Scanning...
+                    </span>
+                  ) : "Scan All Pairs"}
+                </button>
+              )}
+            </div>
+
+            {showScan ? (
+              hasScanResults ? (
+                <div className="flex flex-col gap-2">
+                  {scanResult!.signals.map((s) => (
+                    <TradeInsightCard key={`${s.pair}-${s.tf}`} tf={s.tf} pair={s.pair} signal={s.signal} showPair />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center text-gray-400 text-[13px] py-2">
+                  Currently no signals are triggered
+                </div>
+              )
+            ) : activeSignals.length > 0 ? (
+              <div className="flex flex-col gap-2">
+                {activeSignals.map(({ tf, signal }) => (
+                  <TradeInsightCard key={tf} tf={tf} pair={pair} signal={signal} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center text-gray-400 text-[13px] py-2">
+                Currently no signals are triggered
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       <div className="text-[11px] text-gray-400 text-center mt-4">
         Auto-refreshes every 180s &middot; Data: {dataSource || "Kraken"}

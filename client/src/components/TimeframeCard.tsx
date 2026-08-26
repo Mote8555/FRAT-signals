@@ -5,7 +5,7 @@ import ConfidenceMeter from "./ConfidenceMeter";
 import ComponentBreakdown from "./ComponentBreakdown";
 import useMediaQuery from "../useMediaQuery";
 
-const CandleChart = lazy(() => import("./CandleChart"));
+const ChartModal = lazy(() => import("./ChartModal"));
 
 interface TimeframeCardProps {
   tf: string;
@@ -185,41 +185,32 @@ export default function TimeframeCard({ tf, pair, data }: TimeframeCardProps) {
         {showChart ? "Hide Chart" : "Show Chart"}
       </button>
 
-      {showChart && (
-        <div className="border-t border-slate-800/60 pt-2">
-          {chartLoading && (
+      {showChart && chartData && !chartLoading && (
+        <Suspense
+          fallback={
             <div className="h-[214px] animate-pulse rounded-lg bg-slate-800/40 flex items-center justify-center text-xs text-gray-400">
               Loading chart...
             </div>
-          )}
-          {chartError && !chartLoading && (
-            <div className="rounded-lg bg-red-500/10 border border-red-500/30 p-3 text-center">
-              <div className="text-xs text-red-400 mb-2">{chartError}</div>
-              <button
-                onClick={() => {
-                  setChartData(null);
-                  setChartError(null);
-                  setChartLoading(false);
-                  setFetchKey((k) => k + 1);
-                }}
-                className="px-3 py-1.5 rounded-md bg-red-500/20 text-red-400 text-xs font-semibold border border-red-500/30 cursor-pointer hover:bg-red-500/30 transition-colors"
-              >
-                Retry
-              </button>
-            </div>
-          )}
-          {chartData && !chartLoading && (
-            <Suspense
-              fallback={
-                <div className="h-[214px] animate-pulse rounded-lg bg-slate-800/40 flex items-center justify-center text-xs text-gray-400">
-                  Loading chart...
-                </div>
-              }
-            >
-              <CandleChart data={chartData} height={isMobile ? 120 : 150} />
-            </Suspense>
-          )}
-        </div>
+          }
+        >
+          <ChartModal
+            pair={pair}
+            tf={tf}
+            chartData={chartData}
+            loading={chartLoading}
+            error={chartError}
+            onRetry={() => {
+              setChartData(null);
+              setChartError(null);
+              setChartLoading(false);
+              setFetchKey((k) => k + 1);
+            }}
+            onClose={() => setShowChart(false)}
+            entryPrice={signal?.entryPrice}
+            stopLoss={signal?.stopLoss}
+            takeProfit={signal?.takeProfit}
+          />
+        </Suspense>
       )}
     </div>
   );

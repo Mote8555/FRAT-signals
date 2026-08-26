@@ -105,3 +105,22 @@ export async function fetchChart(pair: string, timeframe: string): Promise<Chart
   }
   return res.json();
 }
+
+export interface ScanSignal {
+  pair: string;
+  tf: string;
+  signal: Signal;
+  lastPrice: number;
+}
+
+export interface ScanResult {
+  signals: ScanSignal[];
+  scannedAt: string;
+  pairCount: number;
+}
+
+export async function fetchScanAll(): Promise<ScanResult> {
+  const res = await fetch(`${BASE}/signals/scan`);
+  if (!res.ok) throw new Error("Failed to scan pairs");
+  return res.json();
+}

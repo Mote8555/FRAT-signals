@@ -3,7 +3,7 @@ import toast, { Toaster } from "react-hot-toast";
 import PairSelector from "./components/PairSelector";
 import FractalSignals from "./components/FractalSignals";
 import useMediaQuery from "./useMediaQuery";
-import { fetchPairs, fetchFractal, type FractalData } from "./api";
+import { fetchPairs, fetchFractal, fetchScanAll, type FractalData, type ScanResult } from "./api";
 
 export default function App() {
   const isMobile = useMediaQuery("(max-width: 640px)");
@@ -12,6 +12,8 @@ export default function App() {
   const [data, setData] = useState<FractalData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [scanResult, setScanResult] = useState<ScanResult | null>(null);
+  const [scanLoading, setScanLoading] = useState(false);
 
   useEffect(() => {
     fetchPairs()
@@ -40,6 +42,21 @@ export default function App() {
       toast.error(msg);
     } finally {
       setLoading(false);
+    }
+  }, []);
+
+  const handleScan = useCallback(async () => {
+    setScanLoading(true);
+    setScanResult(null);
+    try {
+      const result = await fetchScanAll();
+      setScanResult(result);
+      toast.success(`Scan complete — ${result.signals.length} signal(s) found`, { duration: 3000, icon: null });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Scan failed";
+      toast.error(msg);
+    } finally {
+      setScanLoading(false);
     }
   }, []);
 
@@ -92,7 +109,15 @@ export default function App() {
             </button>
           </div>
 
-        <FractalSignals data={data} loading={loading} error={error} onRetry={() => loadFractal(selected)} />
+        <FractalSignals
+          data={data}
+          loading={loading}
+          error={error}
+          onRetry={() => loadFractal(selected)}
+          scanResult={scanResult}
+          scanLoading={scanLoading}
+          onScan={handleScan}
+        />
 
         <div className="text-center mt-6">
           <a

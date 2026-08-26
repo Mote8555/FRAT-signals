@@ -223,6 +223,52 @@ app.get("/api/chart/:pair(*)/:timeframe", async (req, res) => {
   }
 });
 
+let scanCache = { signals: null, scannedAt: 0 };
+const SCAN_CACHE_TTL = 60000;
+
+app.get("/api/signals/scan", async (req, res) => {
+  try {
+    const now = Date.now();
+    if (scanCache.signals && now - scanCache.scannedAt < SCAN_CACHE_TTL) {
+      return res.json(scanCache.signals);
+    }
+
+    const pairs = algo.getPairs();
+    const btcCandleData = await fetchCandleData("BTC/USDT", "1h", 100);
+    const signals = [];
+
+    for (const pair of pairs) {
+      for (const tf of TIMEFRAMES) {
+        try {
+          const result = await analyzeTimeframe(pair, tf, btcCandleData);
+          if (result?.signal) {
+            signals.push({
+              pair,
+              tf,
+              signal: result.signal,
+              lastPrice: result.lastPrice,
+            });
+          }
+        } catch {
+          // skip failed pairs/timeframes
+        }
+      }
+      await new Promise((r) => setTimeout(r, 500));
+    }
+
+    const payload = {
+      signals,
+      scannedAt: new Date().toISOString(),
+      pairCount: pairs.length,
+    };
+
+    scanCache = { signals: payload, scannedAt: Date.now() };
+    res.json(payload);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.get("/api/status", (req, res) => {
   res.json({
     status: "ok",
