@@ -114,7 +114,7 @@ app.get("/api/signal/:pair(*)", async (req, res) => {
 
     const isBTC = symbol.startsWith("BTC/");
     const btcSymbol = isBTC ? symbol : "BTC/USDT";
-    const btcCandleData = await fetchCandleData(btcSymbol, "1h", 100);
+    const btcCandleData = await fetchCandleData(btcSymbol, "1h", 300);
 
     const options = {};
     if (btcCandleData) options.btcPrices = btcCandleData.closes;
