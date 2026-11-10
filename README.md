@@ -1,8 +1,15 @@
 # FRAT Signals
 
-**Fractal Regime-Adaptive Trading System** — a cryptocurrency signal dashboard that analyzes markets across four timeframes with Hurst/DFA regime detection, KAMA/T3 trend confirmation, and VW-MACD momentum, scoring every signal with a weighted confidence grade.
+Nature has a fascinating habit of repeating itself. A tiny branch mirrors a larger tree, rivers create intricate networks, and lightning draws beautiful patterns across the sky. Even inside our bodies, similar structures help organs function efficiently. Behind many of these patterns lies an intriguing mathematical concept called **fractals**.
 
-Live spot data streams from the Kraken exchange via CCXT into a responsive React dark-theme dashboard. Signals are generated independently on the 15m, 1h, 4h, and 1d timeframes, then combined into a fractal confluence view so you can see the full multi-timeframe picture at a glance.
+What makes fractals particularly interesting is that their usefulness extends far beyond the natural world, They have found applications in fields ranging from medicine and telecommunications to urban planning, technology and gaming.One of the applications that fascinated me mostly lies in finance, where fractal concepts offer a different way of looking at the seemingly chaotic movements of financial markets and identifying recurring patterns across different timescales.
+
+The thinking behind the **Fractal Regime-Adaptive Trading System**, is heavily influenced by the concept of fractals.  Live spot-market data is streamed from the Kraken exchange through CCXT into a responsive, dark-themed React dashboard. Signals are generated independently across four timeframes — 15 minutes, 1 hour, 4 hours and 1 day — before being brought together into a **fractal confluence view**.
+
+The system first combines Hurst/DFA regime detection to identify market conditions, KAMA/T3 indicators for trend confirmation, and VW-MACD for momentum analysis. Each signal receives a weighted confidence grade, helping assess how strongly the different indicators support a potential trading direction.
+
+Rather than examining each timeframe in isolation, this combined view reveals how market conditions and trading signals relate across different scales, offering a broader perspective of the market's behaviour.
+
 
 ## Features
 
